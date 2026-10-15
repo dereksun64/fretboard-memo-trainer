@@ -51,7 +51,7 @@ export function RunTest({ engine, bpm, onBusy }: { engine: AudioEngine; bpm: num
     <section className="card wide">
       <h2>Run test</h2>
       <p className="muted small">
-        A Stage 1-style run: one note, strings 6→1→6, judged per beat against a ±
+        An Exercise 1-style run: one note, strings 6→1→6, judged per beat against a ±
         {Math.round(hitWindowMs(bpm))} ms window at {bpm} BPM. The fret is shown here only to make
         testing easier.
       </p>

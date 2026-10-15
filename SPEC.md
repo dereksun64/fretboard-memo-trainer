@@ -63,9 +63,9 @@ These use **rhythm mode**: a metronome plus a six-lane highway.
 | 1 · Naturals | all 7 naturals | one note, 6→1→6, ×3 | 36 |
 | 2 · Sharps & Flats | 7 runs covering all 5 accidental pitches, plus 2 repeats | one note, 6→1→6, ×3 | 36 |
 | 3 · Two Notes | 6 pairs covering all 12 pitch classes once | note A up 6→1, note B down 1→6, ×3 | 36 |
-| 4 · Random | 5 random sets | one random order of the 7 naturals, alternating up/down passes, ×3 (same order each rep) | 126 |
+| 4 · Random | 5 random sets | one random order of the 7 naturals, alternating up/down passes, ×3 (same order each rep; the alternation carries across reps, so there's never a jump from string 1 back to 6) | 126 |
 
-**Note selection is random only.** You hit play and the app draws the next item from the exercise's pool for the current level. It draws without repeats until the pool is used up.
+**Note selection is random only.** Each exercise's pool is shuffled when a level starts, and you hit play to get the next uncleared run. A **failed run moves to the back** of the remaining runs, so the next attempt is a different note.
 
 **Accidental naming:**
 - The 5 accidental pitches are C#/Db, D#/Eb, F#/Gb, G#/Ab and A#/Bb. E#, Fb, B# and Cb are never used.
@@ -103,6 +103,7 @@ For each beat, the app compares the detected note onset (after the latency offse
 - **Miss** = no correct note onset within the window.
 - **Wrong** = an onset inside the window with the wrong pitch.
 - **Cleared** = zero Wrong and zero Miss. Perfect and Good both count as clean.
+- **Accuracy** = (Perfect + 0.9 × Good) ÷ judged beats. **Combo** counts consecutive Perfect/Good and resets on Miss or Wrong.
 - A failed run **keeps playing to the end** so the practice still counts as reps. The results screen then shows *Failed*. *(Default; could instead stop immediately.)*
 
 **Pitch matching:**
@@ -173,7 +174,7 @@ One layout, the calm **Minimal** layout (direction B on the design canvas), with
 
 0. **Detection prototype**: mic → live note + octave + onset timing against a metronome. Confirms the built-in mic works before anything else.
 1. **UI mockups** *(done)*: chose B's layout with a Plain / Blueprint / Retro style setting.
-2. **Core engine**: sequence generation for Basics and Exercises 1–4, the judging logic and the level/progress model.
+2. **Core engine** *(done)*: `src/engine/` — pools (`pools.ts`), run sequences (`sequence.ts`), judging and run summary (`judge.ts`), Basics wait mode (`waitMode.ts`), progress/locking/BPM increase (`progress.ts`) and `localStorage` persistence (`storage.ts`), all pure and unit-tested.
 3. **Rhythm-mode UI**: highway, judgments, combo, results.
 4. **Basics (wait mode)**, onboarding (tuner + calibration) and settings.
 5. **Increase BPM** flow, rainbow bar and Practice mode.

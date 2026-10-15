@@ -15,6 +15,20 @@ export type NoteName = Natural | (typeof SHARPS)[number] | (typeof FLATS)[number
 const NATURAL_PC: Record<Natural, number> = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 }
 
 const SHARP_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
+const FLAT_NAMES = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B']
+
+/** Pitch classes of the 5 accidentals (C#/Db, D#/Eb, F#/Gb, G#/Ab, A#/Bb). */
+export const ACCIDENTAL_PCS = [1, 3, 6, 8, 10] as const
+
+/** Name a pitch class; `spelling` only matters for accidentals. */
+export function nameForPitchClass(pc: number, spelling: 'sharp' | 'flat'): NoteName {
+  const i = ((pc % 12) + 12) % 12
+  return (spelling === 'sharp' ? SHARP_NAMES[i] : FLAT_NAMES[i]) as NoteName
+}
+
+export function isNatural(name: NoteName): name is Natural {
+  return name.length === 1
+}
 
 export const STRINGS: readonly StringNum[] = [6, 5, 4, 3, 2, 1]
 

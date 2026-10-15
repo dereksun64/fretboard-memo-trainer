@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { hitWindowMs, judgeBeats, perfectWindowMs } from './judge'
+import { beatTargets, hitWindowMs, judgeBeats, perfectWindowMs, summarize, type BeatResult } from './judge'
+import { singleNoteRun } from './sequence'
 
 describe('hit window', () => {
   it('is 25% of a beat capped at 200 ms', () => {
@@ -48,5 +49,40 @@ describe('judgeBeats', () => {
     ]
     const r = judgeBeats(close, [{ time: 1.1, midi: 45 }], 100, 10)
     expect(r.map((x) => x.judgment)).toEqual(['good', 'miss'])
+  })
+})
+
+describe('beatTargets', () => {
+  it('spaces beats by the tempo and uses exact expected pitches', () => {
+    const t = beatTargets(singleNoteRun('A', 1), 2, 60)
+    expect(t).toHaveLength(12)
+    expect(t[0]).toEqual({ time: 2, expectedMidi: 45 })
+    expect(t[1]).toEqual({ time: 3, expectedMidi: 57 })
+    expect(t[5].expectedMidi).toBe(69)
+  })
+})
+
+describe('summarize', () => {
+  const r = (judgment: BeatResult['judgment']): BeatResult => ({ judgment })
+
+  it('scores accuracy, combo and clear', () => {
+    const s = summarize([...Array(6).fill(r('perfect')), r('good')])
+    expect(s.accuracy).toBe(98.6)
+    expect(s.maxCombo).toBe(7)
+    expect(s.cleared).toBe(true)
+  })
+
+  it('fails on any miss or wrong note and breaks the combo', () => {
+    const s = summarize([r('perfect'), r('perfect'), r('wrong'), r('perfect')])
+    expect(s.cleared).toBe(false)
+    expect(s.combo).toBe(1)
+    expect(s.maxCombo).toBe(2)
+  })
+
+  it('is not finished while beats are pending', () => {
+    const s = summarize([r('perfect'), r('pending')])
+    expect(s.finished).toBe(false)
+    expect(s.cleared).toBe(false)
+    expect(s.accuracy).toBe(100)
   })
 })
