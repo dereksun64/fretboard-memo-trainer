@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { AudioEngine } from '../audio/engine'
+import { runAccents } from '../audio/metronome'
 import { hitWindowMs, judgeBeats, type BeatTarget, type BeatResult, type PlayedNote } from '../engine/judge'
 import { singleNoteRun, type Step } from '../engine/sequence'
 import { NATURALS, expectedMidi, fretFor, midiToName, type Natural } from '../music/notes'
@@ -38,7 +39,7 @@ export function RunTest({ engine, bpm, onBusy }: { engine: AudioEngine; bpm: num
       time: t0 + (COUNT_IN + i) * spb,
       expectedMidi: expectedMidi(s.note, s.string, windowStart),
     }))
-    engine.metronome.start(bpm, { startTime: t0, beats: COUNT_IN + steps.length })
+    engine.metronome.start(bpm, { startTime: t0, beats: COUNT_IN + steps.length, accent: runAccents(COUNT_IN) })
     setRun({ t0, bpm, windowStart, steps, beats })
   }
 
@@ -94,25 +95,30 @@ export function RunTest({ engine, bpm, onBusy }: { engine: AudioEngine; bpm: num
 
 function RunView({ engine, run, played }: { engine: AudioEngine; run: Run; played: PlayedNote[] }) {
   useFrame()
-  const now = engine.ctx.currentTime
+  // Same clock and rules as the game's Play screen: draw on the time you're
+  // hearing, count down exactly on each click, and highlight the note you
+  // should play next (the first one not yet judged).
+  const now = engine.displayTime()
   const spb = 60 / run.bpm
   const results = judgeBeats(run.beats, played, run.bpm, now)
   const firstBeat = run.beats[0].time
-  const current = Math.round((now - firstBeat) / spb)
-  const done = results.every((r) => r.judgment !== 'pending')
+  const countIn = now < firstBeat - spb / 2 ? Math.min(COUNT_IN, Math.ceil((firstBeat - now) / spb)) : 0
+  const next = results.findIndex((r) => r.judgment === 'pending')
+  const current = next === -1 ? run.steps.length - 1 : next
+  const done = next === -1
 
   const counts = { perfect: 0, good: 0, miss: 0, wrong: 0 }
   for (const r of results) if (r.judgment !== 'pending') counts[r.judgment]++
   const cleared = counts.miss === 0 && counts.wrong === 0
 
-  const target = run.steps[Math.max(0, Math.min(current, run.steps.length - 1))]
+  const target = run.steps[current]
 
   return (
     <div className="run">
       {!done && (
         <div className="big-label">
-          {current < 0 ? (
-            `Count-in ${Math.min(COUNT_IN, -current)}`
+          {countIn ? (
+            `Count-in ${countIn}`
           ) : (
             <>
               {target.note} <span className="muted">on string {target.string}</span>{' '}
@@ -123,7 +129,7 @@ function RunView({ engine, run, played }: { engine: AudioEngine; run: Run; playe
       )}
       <div className="beats">
         {run.steps.map((s, i) => (
-          <BeatCell key={i} step={s} result={results[i]} active={!done && i === current} />
+          <BeatCell key={i} step={s} result={results[i]} active={!done && !countIn && i === current} />
         ))}
       </div>
       <div className="summary">

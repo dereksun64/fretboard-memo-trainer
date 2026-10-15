@@ -42,9 +42,11 @@ header {
   margin-bottom: 20px;
 }
 
+/* Always two columns (the four tool panels form a 2x2 grid); one column on
+   narrow screens. Wide cards span both. */
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
 }
 
@@ -94,6 +96,7 @@ label.slider > span:first-child {
 }
 
 input[type='number'],
+input[type='text'],
 select {
   font: inherit;
   padding: 6px 8px;
@@ -320,6 +323,12 @@ th {
   align-items: center;
   gap: 8px;
   margin-top: 12px;
+}
+
+@media (max-width: 720px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 @media (max-width: 640px) {

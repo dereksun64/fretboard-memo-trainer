@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { getAudioEngine } from '../app/audio'
 import type { AudioEngine } from '../audio/engine'
+import { BpmInput } from './BpmInput'
 import { Calibration } from './Calibration'
 import { DetectorSettings } from './DetectorSettings'
 import { LivePanel } from './LivePanel'
@@ -74,13 +75,7 @@ function Prototype({ engine }: { engine: AudioEngine }) {
         <div className="row">
           <label>
             BPM
-            <input
-              type="number"
-              min={20}
-              max={240}
-              value={bpm}
-              onChange={(e) => changeBpm(Number(e.target.value) || 40)}
-            />
+            <BpmInput value={bpm} onChange={changeBpm} />
           </label>
           <button onClick={toggleMetronome}>{metroOn ? 'Stop' : 'Start'} metronome</button>
         </div>

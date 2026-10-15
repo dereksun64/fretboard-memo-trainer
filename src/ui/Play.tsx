@@ -7,6 +7,7 @@ import { getAudioEngine } from '../app/audio'
 import { navigate } from '../app/navigate'
 import { useFrameValue } from '../app/useNow'
 import type { AudioEngine } from '../audio/engine'
+import { runAccents } from '../audio/metronome'
 import { beatTargets, hitWindowMs, judgeBeats, summarize, type BeatTarget, type PlayedNote, type RunSummary } from '../engine/judge'
 import { drawPool, type ExerciseId, type PoolItem } from '../engine/pools'
 import { clearedCount, isUnlocked, nextItem, poolSize, type Progress } from '../engine/progress'
@@ -81,7 +82,7 @@ export function Play({ exercise, progress, windowStart, onRunFinished }: Props) 
       const spb = 60 / bpm
       const t0 = e.ctx.currentTime + LEAD
       const firstBeat = t0 + COUNT_IN * spb
-      e.metronome.start(bpm, { startTime: t0, beats: COUNT_IN + steps.length })
+      e.metronome.start(bpm, { startTime: t0, beats: COUNT_IN + steps.length, accent: runAccents(COUNT_IN) })
       if (import.meta.env.DEV) {
         // Lets browser tests line simulated plucks up with the beats.
         Object.assign(window, { __fmtRun: { firstBeat, spb, steps, now: () => e.ctx.currentTime } })

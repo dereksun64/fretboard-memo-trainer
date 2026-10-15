@@ -4,8 +4,11 @@
 // The click is a short filtered noise burst, deliberately unpitched, so the
 // note analyzer won't mistake bleed from laptop speakers for a note.
 
-const LOOKAHEAD = 0.12 // s scheduled ahead
-const TICK_MS = 25
+// Clicks are handed to the audio thread this far ahead. Generous, because
+// browsers slow timers in background tabs (to ~1 s); stop() cancels clicks
+// already scheduled, so a long lookahead never leaves stray clicks.
+const LOOKAHEAD = 1.2 // s
+const TICK_MS = 50
 
 export class Metronome {
   private readonly ctx: AudioContext
@@ -15,8 +18,10 @@ export class Metronome {
   private t0 = 0
   private spb = 1
   private next = 0
-  private accentEvery = 4
+  private accent: (beat: number) => boolean = (i) => i % 4 === 0
   private maxBeats = Infinity
+  /** Clicks already handed to the audio thread, so stop() can cancel them. */
+  private scheduled: AudioBufferSourceNode[] = []
 
   constructor(ctx: AudioContext) {
     this.ctx = ctx
@@ -50,30 +55,43 @@ export class Metronome {
 
   /**
    * Start clicking at `startTime` (default: shortly from now).
-   * `beats` limits the total number of clicks.
+   * `beats` limits the total number of clicks; `accent` picks the louder
+   * ones (default: every 4th).
    */
-  start(bpm: number, opts: { startTime?: number; beats?: number; accentEvery?: number } = {}) {
+  start(bpm: number, opts: { startTime?: number; beats?: number; accent?: (beat: number) => boolean } = {}) {
     this.stop()
     this.spb = 60 / bpm
     this.t0 = opts.startTime ?? this.ctx.currentTime + 0.1
     this.next = 0
     this.maxBeats = opts.beats ?? Infinity
-    this.accentEvery = opts.accentEvery ?? 4
+    this.accent = opts.accent ?? ((i) => i % 4 === 0)
     this.schedule()
     this.timer = window.setInterval(() => this.schedule(), TICK_MS)
   }
 
+  /** Stop clicking, including clicks already scheduled a moment ahead. */
   stop() {
     if (this.timer !== null) window.clearInterval(this.timer)
     this.timer = null
+    for (const src of this.scheduled) {
+      try {
+        src.stop()
+      } catch {
+        // already finished
+      }
+    }
+    this.scheduled = []
   }
 
   private schedule() {
     while (this.next < this.maxBeats && this.beatTime(this.next) < this.ctx.currentTime + LOOKAHEAD) {
-      this.click(this.beatTime(this.next), this.next % this.accentEvery === 0)
+      this.click(this.beatTime(this.next), this.accent(this.next))
       this.next++
     }
-    if (this.next >= this.maxBeats) this.stop()
+    if (this.next >= this.maxBeats && this.timer !== null) {
+      window.clearInterval(this.timer)
+      this.timer = null
+    }
   }
 
   private click(time: number, accent: boolean) {
@@ -89,5 +107,17 @@ export class Metronome {
     src.connect(filter).connect(env).connect(this.out)
     src.start(time)
     src.stop(time + 0.03)
+    src.onended = () => {
+      this.scheduled = this.scheduled.filter((s) => s !== src)
+    }
+    this.scheduled.push(src)
   }
+}
+
+/**
+ * Accents for a run: the first count-in click, then the first beat of every
+ * 6-string pass, so the strong clicks line up with the pattern being played.
+ */
+export function runAccents(countIn: number, passLength = 6): (beat: number) => boolean {
+  return (i) => i === 0 || (i >= countIn && (i - countIn) % passLength === 0)
 }
