@@ -1,0 +1,422 @@
+.play {
+  max-width: 1180px;
+  gap: 24px;
+}
+
+.play-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  text-decoration: none;
+  font-size: 16px;
+}
+.back-name {
+  font-weight: 600;
+}
+:root[data-style='blueprint'] .back-name {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 500;
+  font-size: 19px;
+}
+
+.ready {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 640px;
+}
+.ready h1 {
+  margin: 0;
+  font-size: 48px;
+  line-height: 1.1;
+}
+.ready p {
+  margin: 0;
+}
+.ready .btn {
+  margin-top: 12px;
+  min-width: 140px;
+}
+
+.run-meta {
+  display: flex;
+  justify-content: flex-end;
+  gap: 22px;
+  font-size: 14px;
+  margin-bottom: -12px;
+}
+.ink {
+  color: var(--ink);
+}
+.run-progress {
+  height: 2px;
+  background: var(--line);
+}
+.run-progress > span {
+  display: block;
+  height: 100%;
+  background: var(--ink);
+}
+:root[data-style='retro'] .run-progress > span {
+  background: var(--accent);
+}
+
+/* ---- Target + feedback ---- */
+.target-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  min-height: 120px;
+}
+.target {
+  display: flex;
+  align-items: flex-end;
+  gap: 20px;
+}
+.target-note {
+  display: inline-block;
+  min-width: 1ch;
+  font-size: 112px;
+  line-height: 0.85;
+  padding: 0 6px;
+}
+:root[data-style='retro'] .target-note {
+  color: var(--accent);
+}
+.target-side {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 6px;
+}
+.target-string {
+  font-size: 22px;
+  font-weight: 500;
+}
+:root[data-style='blueprint'] .target-string {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 28px;
+}
+.feedback {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 12px 22px;
+  font-size: 15px;
+}
+.judgment {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.combo {
+  font-size: 24px;
+  color: var(--ink);
+}
+
+/* ---- Highway ---- */
+.highway {
+  position: relative;
+  height: 312px;
+  overflow: hidden;
+}
+.lane {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  display: flex;
+  align-items: center;
+}
+.lane-label {
+  width: 40px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.lane-string {
+  flex: 1;
+  background: var(--string);
+}
+.hit-line {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--accent);
+}
+.hit-arrow {
+  position: absolute;
+  top: -2px;
+}
+.hit-t {
+  position: absolute;
+  top: -4px;
+  font-size: 15px;
+  color: var(--accent);
+}
+.hit-ring {
+  position: absolute;
+  top: -2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 3px solid var(--accent);
+  background: var(--bg);
+}
+:root[data-style='blueprint'] .highway {
+  overflow: visible;
+}
+:root[data-style='blueprint'] .hit-line {
+  top: 8px;
+  width: 1.5px;
+}
+
+.note {
+  position: absolute;
+  left: -18px;
+  top: -18px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--note-bg);
+  border: 1.5px solid var(--note-ring);
+  box-shadow: var(--note-grooves);
+  color: var(--note-fg);
+  font-size: 15px;
+  font-weight: 600;
+  will-change: transform;
+}
+:root[data-style='blueprint'] .note {
+  font-family: var(--font-display);
+  font-size: 17px;
+}
+.note.next {
+  background: var(--next-bg);
+  border-color: var(--next-bg);
+  color: var(--next-fg);
+}
+:root[data-style='retro'] .note.next {
+  box-shadow:
+    inset 0 0 0 3px var(--next-bg),
+    inset 0 0 0 4px rgba(24, 24, 24, 0.4),
+    inset 0 0 0 7px var(--next-bg),
+    inset 0 0 0 8px rgba(24, 24, 24, 0.35);
+}
+.note.judged {
+  left: -7px;
+  top: -7px;
+  width: 14px;
+  height: 14px;
+  border: none;
+  box-shadow: none;
+  opacity: 0.85;
+}
+.note.perfect { background: var(--perfect); }
+.note.good { background: var(--good); }
+.note.miss { background: var(--miss); }
+.note.wrong { background: var(--wrong); }
+
+/* ---- Footer ---- */
+.play-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  font-size: 14px;
+}
+.count {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.dot.perfect { background: var(--perfect); }
+.dot.good { background: var(--good); }
+.dot.miss { background: var(--miss); }
+.dot.wrong { background: var(--wrong); }
+.foot-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.listening {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: 10px;
+  font-size: 14px;
+}
+.btn[aria-pressed='true'] {
+  border-color: var(--ink);
+}
+
+/* ---- Results ---- */
+.results {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px 32px;
+  padding: 20px 24px;
+  border: 1px solid var(--ink);
+  border-radius: var(--radius);
+}
+:root[data-style='retro'] .results {
+  border-radius: 0;
+}
+.results-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.results-title {
+  font-size: 40px;
+  line-height: 1;
+}
+.results-title.cleared {
+  color: var(--perfect);
+}
+.results-title.failed {
+  color: var(--wrong);
+}
+.results-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 28px;
+  margin: 0;
+}
+.results-stats dt {
+  font-size: 12px;
+}
+.results-stats dd {
+  margin: 0;
+  font-size: 22px;
+}
+.results-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* ---- Fretboard diagram ---- */
+.diagram {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.diagram-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+}
+.diagram-scroll {
+  overflow-x: auto;
+}
+.diagram table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.diagram th,
+.diagram td {
+  height: 30px;
+  text-align: center;
+  font-weight: 400;
+}
+.diagram thead th {
+  font-size: 12px;
+  color: var(--muted);
+  padding-bottom: 4px;
+}
+.diagram thead th.marker {
+  color: var(--accent-ink);
+}
+.diagram tbody th {
+  width: 40px;
+  text-align: left;
+  font-size: 12px;
+}
+.diagram tbody td {
+  border-top: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+}
+.diagram td.natural {
+  font-size: 16px;
+  color: var(--ink);
+}
+.diagram td.accidental {
+  font-size: 12px;
+  color: var(--sharp);
+}
+:root[data-style='plain'] .diagram td.natural {
+  font-weight: 600;
+}
+
+/* ---- Basics wait-mode grid ---- */
+.wait-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.wait-row {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 6px;
+}
+.wait-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  font-size: 13px;
+  color: var(--muted);
+}
+:root[data-style='retro'] .wait-cell {
+  border-radius: 50%;
+  width: 40px;
+  justify-self: center;
+}
+.wait-cell.done {
+  background: var(--perfect);
+  border-color: var(--perfect);
+  color: var(--bg);
+}
+.wait-cell.now {
+  background: var(--next-bg);
+  border-color: var(--next-bg);
+  color: var(--next-fg);
+}

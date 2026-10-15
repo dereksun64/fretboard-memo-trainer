@@ -1,0 +1,232 @@
+.home-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.wordmark {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  font-size: 22px;
+}
+.wordmark .stripe {
+  flex-basis: 100%;
+  height: 4px;
+}
+
+.head-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.segmented {
+  display: flex;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.seg {
+  min-height: 40px;
+  padding: 0 14px;
+  border: none;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+.seg[aria-pressed='true'] {
+  background: var(--ink);
+  color: var(--bg);
+}
+
+/* ---- Level ---- */
+.level {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 24px 44px;
+}
+.level-num {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.level-value {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 0 4px;
+}
+.level-value .display {
+  font-size: 88px;
+  line-height: 0.9;
+  font-variant-numeric: tabular-nums;
+}
+.level-bar {
+  flex: 999 1 360px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.bar-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 14px;
+}
+.bar {
+  position: relative;
+  height: 6px;
+  border-radius: var(--radius);
+  background: var(--track);
+  overflow: hidden;
+}
+.bar-fill,
+.bar-rainbow {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+}
+.bar-fill {
+  background: var(--ink);
+}
+.bar-rainbow {
+  background: linear-gradient(90deg, #e5484d, #f2994a, #e9c46a, #46a758, #3e9be0, #6e56cf, #d6409f);
+}
+:root[data-style='retro'] .bar {
+  height: 22px;
+  border-radius: 0;
+}
+:root[data-style='retro'] .bar-fill {
+  background: var(--accent);
+}
+:root[data-style='retro'] .bar-rainbow {
+  background: repeating-linear-gradient(90deg, #802520 0 16px, #ba8530 16px 32px, #5c7f71 32px 48px, #d27c49 48px 64px, #6e5aa8 64px 80px);
+}
+:root[data-style='blueprint'] .bar {
+  height: 5px;
+  border-radius: 0;
+  overflow: visible;
+  background: var(--line);
+}
+.bar-ticks {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+}
+
+/* ---- Increase BPM ---- */
+.increase {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+}
+:root[data-style='retro'] .increase {
+  border-radius: 0;
+}
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ---- Exercise list ---- */
+.list {
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid var(--line);
+}
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 24px;
+  padding: 20px 0;
+  border-top: 1px solid var(--line);
+}
+.row.locked {
+  opacity: 0.5;
+}
+.row-code {
+  width: 52px;
+  font-size: 15px;
+  color: var(--muted);
+}
+.row.current .row-code {
+  color: var(--accent-ink);
+}
+:root[data-style='retro'] .row-code {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+.row-main {
+  flex: 999 1 260px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 14px;
+}
+.row-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 19px;
+  font-weight: 600;
+}
+:root[data-style='blueprint'] .row-name {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 500;
+  font-size: 22px;
+}
+.row-progress {
+  flex: 1 1 160px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+}
+.pips {
+  display: flex;
+  gap: 3px;
+}
+.pips > span {
+  flex: 1;
+  height: 4px;
+  background: var(--line);
+}
+.pips > span.on {
+  background: var(--ink);
+}
+:root[data-style='blueprint'] .pips > span.on {
+  background: var(--accent);
+}
+:root[data-style='retro'] .pips > span {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+:root[data-style='retro'] .pips > span.on {
+  background: var(--accent);
+}
+.row .btn {
+  min-width: 96px;
+}

@@ -175,9 +175,9 @@ One layout, the calm **Minimal** layout (direction B on the design canvas), with
 0. **Detection prototype**: mic → live note + octave + onset timing against a metronome. Confirms the built-in mic works before anything else.
 1. **UI mockups** *(done)*: chose B's layout with a Plain / Blueprint / Retro style setting.
 2. **Core engine** *(done)*: `src/engine/` — pools (`pools.ts`), run sequences (`sequence.ts`), judging and run summary (`judge.ts`), Basics wait mode (`waitMode.ts`), progress/locking/BPM increase (`progress.ts`) and `localStorage` persistence (`storage.ts`), all pure and unit-tested.
-3. **Rhythm-mode UI**: highway, judgments, combo, results.
-4. **Basics (wait mode)**, onboarding (tuner + calibration) and settings.
-5. **Increase BPM** flow, rainbow bar and Practice mode.
+3. **Rhythm-mode UI** *(done)*: Home (level bar, in-order exercise list, style + theme switch), Play (count-in, live highway, judgments, combo, results, diagram on D, Esc to stop) and Basics (wait mode). Routes: `#/`, `#/basics`, `#/play/1`–`4`, `#/lab` (detection prototype).
+4. **Onboarding** (mic check, tuner, latency calibration in-app instead of the lab) and a settings screen (fret window, metronome volume).
+5. **Practice mode**, a proper Increase BPM celebration (the basic increase flow already works), and pause instead of stop.
 
 ## Out of scope for now
 

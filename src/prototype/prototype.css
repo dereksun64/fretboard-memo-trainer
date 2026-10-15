@@ -1,7 +1,10 @@
-/* Plain utilitarian styling for the detection prototype only.
-   The real UI direction (arcade vs minimal) gets decided via mockups. */
+/* Plain utilitarian styling for the detection lab (#/lab) only.
+   Scoped under .lab with CSS nesting so it can't leak into the app. */
 
-:root {
+.lab {
+  min-height: 100vh;
+
+& {
   --bg: #f6f6f4;
   --card: #ffffff;
   --text: #1c1c1e;
@@ -17,7 +20,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  & {
     --bg: #141416;
     --card: #1e1e21;
     --text: #ececef;
@@ -37,7 +40,7 @@
   box-sizing: border-box;
 }
 
-body {
+& {
   margin: 0;
   background: var(--bg);
   color: var(--text);
@@ -348,4 +351,5 @@ th {
   .beats {
     grid-template-columns: repeat(6, minmax(0, 1fr));
   }
+}
 }
