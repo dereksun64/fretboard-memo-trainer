@@ -11,7 +11,7 @@ import { beatTargets, hitWindowMs, judgeBeats, summarize, type BeatTarget, type 
 import { drawPool, type ExerciseId, type PoolItem } from '../engine/pools'
 import { clearedCount, isUnlocked, nextItem, poolSize, type Progress } from '../engine/progress'
 import { REPS, runSteps, type Step } from '../engine/sequence'
-import { midiToName } from '../music/notes'
+import { midiToName, stringLabel } from '../music/notes'
 import { SelectionBox, Stripe, Tag } from './decor'
 import { EXERCISE_INFO, exerciseCode } from './exercises'
 import { FretDiagram } from './FretDiagram'
@@ -196,7 +196,10 @@ interface RunViewProps {
 function RunView({ run, engine, diagram, windowStart, onToggleDiagram, onFinished, onNext, progressNote }: RunViewProps) {
   const finishedRef = useRef(false)
   const [summary, setSummary] = useState<RunSummary | null>(null)
-  const now = useFrameValue(() => engine.ctx.currentTime, summary === null)
+  // Draw on the clock you're hearing (not the one the audio thread is
+  // rendering ahead), and keep animating after the run ends so the last notes
+  // slide past and fade.
+  const now = useFrameValue(() => engine.displayTime())
 
   const results = judgeBeats(run.beats, run.played, run.bpm, now)
   const live = summarize(results)
@@ -211,24 +214,29 @@ function RunView({ run, engine, diagram, windowStart, onToggleDiagram, onFinishe
 
   const next = results.findIndex((r) => r.judgment === 'pending')
   const lastIdx = next === -1 ? results.length - 1 : next - 1
-  const last = lastIdx >= 0 ? results[lastIdx] : null
+  const last = lastIdx >= 0 && results[lastIdx].judgment !== 'pending' ? results[lastIdx] : null
   const countIn = now < run.firstBeat - run.spb / 2 ? Math.min(COUNT_IN, Math.ceil((run.firstBeat - now) / run.spb)) : 0
   const target = run.steps[next === -1 ? run.steps.length - 1 : next]
   const perRep = run.steps.length / REPS
   const beatNo = next === -1 ? run.steps.length : next + 1
   const rep = Math.min(REPS, Math.floor((beatNo - 1) / perRep) + 1)
   const heard = engine.livePitch.midi
+  // Results wait until the last note has slid past the hit line and faded.
+  const lastBeat = run.beats[run.beats.length - 1].time
+  const showResults = summary !== null && now > lastBeat + run.spb + 0.15
 
   return (
     <>
       <div className="run-meta label muted">
         <span>
-          Run <span className="ink">{rep}</span>/{REPS}
+          Run <span className="ink mono">{rep}</span>/{REPS}
         </span>
         <span>
-          Beat <span className="ink">{String(beatNo).padStart(2, '0')}</span>/{run.steps.length}
+          Beat <span className="ink mono">{String(beatNo).padStart(2, '0')}</span>/{run.steps.length}
         </span>
-        <span>±{Math.round(hitWindowMs(run.bpm))} ms</span>
+        <span>
+          ±<span className="mono">{Math.round(hitWindowMs(run.bpm))}</span> ms
+        </span>
       </div>
       <div className="run-progress" role="progressbar" aria-label="Run progress" aria-valuemin={0} aria-valuemax={run.steps.length} aria-valuenow={beatNo}>
         <span style={{ width: `${(Math.max(0, beatNo - 1) / run.steps.length) * 100}%` }} />
@@ -240,39 +248,81 @@ function RunView({ run, engine, diagram, windowStart, onToggleDiagram, onFinishe
             <span className="target-note display">{countIn ? countIn : target.note}</span>
           </SelectionBox>
           <div className="target-side">
-            <span className="target-string">{countIn ? 'Count-in' : `string ${target.string}`}</span>
+            <span className="target-string">{countIn ? 'Count-in' : `${stringLabel(target.string)} string`}</span>
             <Stripe width={96} />
           </div>
         </div>
         <div className="feedback" aria-live="polite">
-          {last && last.judgment !== 'pending' && (
-            <span className="judgment">
-              <Tag>{last.judgment}</Tag>
-              {last.offsetMs !== undefined && (
-                <span className="mono muted">
-                  {last.offsetMs > 0 ? '+' : ''}
-                  {last.offsetMs} ms
+          <span className="judgment-slot">
+            {last && (
+              <>
+                <Tag>{last.judgment}</Tag>
+                <span className="offset mono muted">
+                  {last.judgment === 'wrong' && last.playedMidi !== undefined
+                    ? midiToName(last.playedMidi)
+                    : last.offsetMs !== undefined
+                      ? `${last.offsetMs > 0 ? '+' : last.offsetMs < 0 ? '−' : ''}${Math.abs(last.offsetMs)} ms`
+                      : ''}
                 </span>
-              )}
-              {last.judgment === 'wrong' && last.playedMidi !== undefined && (
-                <span className="muted">heard {midiToName(last.playedMidi)}</span>
-              )}
-            </span>
-          )}
-          <span className="muted">
+              </>
+            )}
+          </span>
+          <span className="combo-slot muted">
             <span className="combo display">{live.combo}</span> in a row
           </span>
         </div>
       </section>
 
-      <Highway steps={run.steps} beats={run.beats} results={results} now={now} spb={run.spb} next={next} />
+      <div className="stage">
+        <Highway steps={run.steps} beats={run.beats} results={results} now={now} spb={run.spb} next={next} />
+        {showResults && summary && (
+          <section className="results overlay" aria-live="assertive">
+            <div className="results-main">
+              <span className={`results-title display ${summary.cleared ? 'cleared' : 'failed'}`}>
+                {summary.cleared ? 'Cleared' : 'Failed'}
+              </span>
+              <span className="muted">{progressNote}</span>
+            </div>
+            <dl className="results-stats">
+              <div>
+                <dt className="label muted">Accuracy</dt>
+                <dd className="mono">{summary.accuracy}%</dd>
+              </div>
+              <div>
+                <dt className="label muted">Max combo</dt>
+                <dd className="mono">{summary.maxCombo}</dd>
+              </div>
+              <div>
+                <dt className="label muted">Perfect / Good</dt>
+                <dd className="mono">
+                  {summary.perfect} / {summary.good}
+                </dd>
+              </div>
+              <div>
+                <dt className="label muted">Miss / Wrong</dt>
+                <dd className="mono">
+                  {summary.miss} / {summary.wrong}
+                </dd>
+              </div>
+            </dl>
+            <div className="results-actions">
+              <button type="button" className="btn primary" onClick={onNext} autoFocus>
+                Next run
+              </button>
+              <a className="btn" href="#/">
+                Exercises
+              </a>
+            </div>
+          </section>
+        )}
+      </div>
 
       <section className="play-foot">
         <div className="counts">
           {(['perfect', 'good', 'miss', 'wrong'] as const).map((k) => (
             <span key={k} className="count">
               <span className={`dot ${k}`} />
-              <span className="mono">{live[k]}</span>
+              <span className="count-num mono">{live[k]}</span>
               <span className="label muted">{k}</span>
             </span>
           ))}
@@ -280,7 +330,13 @@ function RunView({ run, engine, diagram, windowStart, onToggleDiagram, onFinishe
         <div className="foot-actions">
           <span className="listening label muted">
             <span className="dot perfect" />
-            {heard !== null ? `Hearing ${midiToName(Math.round(heard))}` : 'Listening'}
+            {heard !== null ? (
+              <>
+                Hearing <span className="mono">{midiToName(Math.round(heard))}</span>
+              </>
+            ) : (
+              'Listening'
+            )}
           </span>
           <button type="button" className="btn" aria-pressed={diagram} onClick={onToggleDiagram}>
             Diagram <span className="label muted">D</span>
@@ -290,47 +346,6 @@ function RunView({ run, engine, diagram, windowStart, onToggleDiagram, onFinishe
           </a>
         </div>
       </section>
-
-      {summary && (
-        <section className="results" aria-live="assertive">
-          <div className="results-main">
-            <span className={`results-title display ${summary.cleared ? 'cleared' : 'failed'}`}>
-              {summary.cleared ? 'Cleared' : 'Failed'}
-            </span>
-            <span className="muted">{progressNote}</span>
-          </div>
-          <dl className="results-stats">
-            <div>
-              <dt className="label muted">Accuracy</dt>
-              <dd className="mono">{summary.accuracy}%</dd>
-            </div>
-            <div>
-              <dt className="label muted">Max combo</dt>
-              <dd className="mono">{summary.maxCombo}</dd>
-            </div>
-            <div>
-              <dt className="label muted">Perfect / Good</dt>
-              <dd className="mono">
-                {summary.perfect} / {summary.good}
-              </dd>
-            </div>
-            <div>
-              <dt className="label muted">Miss / Wrong</dt>
-              <dd className="mono">
-                {summary.miss} / {summary.wrong}
-              </dd>
-            </div>
-          </dl>
-          <div className="results-actions">
-            <button type="button" className="btn primary" onClick={onNext} autoFocus>
-              Next run
-            </button>
-            <a className="btn" href="#/">
-              Exercises
-            </a>
-          </div>
-        </section>
-      )}
 
       {diagram && <FretDiagram windowStart={windowStart} />}
     </>

@@ -76,20 +76,25 @@
   flex-wrap: wrap;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 24px;
-  min-height: 120px;
+  gap: 16px 24px;
 }
 .target {
   display: flex;
   align-items: flex-end;
   gap: 20px;
+  height: 108px;
 }
+/* Fixed box: wide enough for "C#"/"Db" or a count-in digit, so nothing
+   next to it moves when the note changes. */
 .target-note {
   display: inline-block;
-  min-width: 1ch;
+  width: 1.45em;
+  height: 0.9em;
   font-size: 112px;
   line-height: 0.85;
   padding: 0 6px;
+  box-sizing: content-box;
+  white-space: nowrap;
 }
 :root[data-style='retro'] .target-note {
   color: var(--accent);
@@ -98,11 +103,13 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  width: 190px;
   padding-bottom: 6px;
 }
 .target-string {
   font-size: 22px;
   font-weight: 500;
+  white-space: nowrap;
 }
 :root[data-style='blueprint'] .target-string {
   font-family: var(--font-display);
@@ -111,19 +118,41 @@
 }
 .feedback {
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 12px 22px;
+  align-items: center;
+  gap: 22px;
   font-size: 15px;
+  height: 32px;
+  white-space: nowrap;
 }
-.judgment {
+/* Fixed-width slots: judgment words, offsets and combo counts change every
+   beat, so each sits in a box sized for its longest value. */
+.judgment-slot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  width: 210px;
+  height: 32px;
+}
+.offset {
+  display: inline-block;
+  width: 7ch;
+  text-align: right;
+}
+.combo-slot {
   display: inline-flex;
   align-items: baseline;
-  gap: 10px;
+  gap: 6px;
+  height: 32px;
+  line-height: 32px;
 }
 .combo {
+  display: inline-block;
+  width: 2.2ch;
+  text-align: right;
   font-size: 24px;
   color: var(--ink);
+  font-variant-numeric: tabular-nums;
 }
 
 /* ---- Highway ---- */
@@ -161,12 +190,6 @@
   position: absolute;
   top: -2px;
 }
-.hit-t {
-  position: absolute;
-  top: -4px;
-  font-size: 15px;
-  color: var(--accent);
-}
 .hit-ring {
   position: absolute;
   top: -2px;
@@ -186,10 +209,10 @@
 
 .note {
   position: absolute;
-  left: -18px;
-  top: -18px;
-  width: 36px;
-  height: 36px;
+  left: -20px;
+  top: -20px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -198,13 +221,13 @@
   border: 1.5px solid var(--note-ring);
   box-shadow: var(--note-grooves);
   color: var(--note-fg);
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
-  will-change: transform;
+  will-change: transform, opacity;
 }
 :root[data-style='blueprint'] .note {
   font-family: var(--font-display);
-  font-size: 17px;
+  font-size: 18px;
 }
 .note.next {
   background: var(--next-bg);
@@ -218,19 +241,92 @@
     inset 0 0 0 7px var(--next-bg),
     inset 0 0 0 8px rgba(24, 24, 24, 0.35);
 }
-.note.judged {
-  left: -7px;
-  top: -7px;
-  width: 14px;
-  height: 14px;
-  border: none;
-  box-shadow: none;
-  opacity: 0.85;
+
+/* Judgment colour, shared by passed notes and hit bursts. */
+.perfect { --c: var(--perfect); }
+.good { --c: var(--good); }
+.miss { --c: var(--miss); }
+.wrong { --c: var(--wrong); }
+
+/* Past the hit line: keep sliding, take the judgment colour, fade (opacity set inline). */
+.note.past {
+  border-color: var(--c);
+  color: var(--c);
 }
-.note.perfect { background: var(--perfect); }
-.note.good { background: var(--good); }
-.note.miss { background: var(--miss); }
-.note.wrong { background: var(--wrong); }
+:root[data-style='plain'] .note.past.perfect,
+:root[data-style='plain'] .note.past.good {
+  background: var(--c);
+  color: var(--bg);
+}
+:root[data-style='blueprint'] .note.past {
+  border-width: 1.5px;
+}
+:root[data-style='retro'] .note.past {
+  border-width: 2px;
+}
+
+/* osu-style approach circle: shrinks onto the note as its beat nears. */
+.approach {
+  position: absolute;
+  inset: -1.5px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  pointer-events: none;
+}
+:root[data-style='plain'] .approach {
+  border-width: 1.5px;
+  border-color: var(--ink);
+}
+:root[data-style='blueprint'] .approach {
+  border: 1px dashed var(--accent);
+}
+:root[data-style='retro'] .approach {
+  border-width: 3px;
+}
+
+/* Hit burst on the hit line (transform and opacity set inline). */
+.burst {
+  position: absolute;
+  left: -22px;
+  top: -22px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 2px solid var(--c);
+  pointer-events: none;
+}
+:root[data-style='plain'] .burst {
+  border-width: 1.5px;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 20%, transparent);
+}
+/* Blueprint: a selection box flashing out, with square corner handles. */
+:root[data-style='blueprint'] .burst {
+  border-radius: 0;
+  border-width: 1px;
+}
+.burst .tick {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: var(--c);
+}
+.burst .tl { left: -3.5px; top: -3.5px; }
+.burst .tr { right: -3.5px; top: -3.5px; }
+.burst .bl { left: -3.5px; bottom: -3.5px; }
+.burst .br { right: -3.5px; bottom: -3.5px; }
+/* Retro: a double ripple, like grooves spreading out. */
+:root[data-style='retro'] .burst {
+  border-width: 3px;
+  outline: 2px solid var(--c);
+  outline-offset: 5px;
+}
+
+/* String names keep their case (high e vs low E) in every style. */
+.string-name,
+.label.string-name {
+  text-transform: none;
+  font-weight: 600;
+}
 
 /* ---- Footer ---- */
 .play-foot {
@@ -253,6 +349,11 @@
   align-items: center;
   gap: 8px;
 }
+.count-num {
+  display: inline-block;
+  min-width: 2ch;
+  text-align: right;
+}
 .dot {
   width: 8px;
   height: 8px;
@@ -273,14 +374,35 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  width: 150px;
   margin-right: 10px;
   font-size: 14px;
+  white-space: nowrap;
 }
 .btn[aria-pressed='true'] {
   border-color: var(--ink);
 }
 
 /* ---- Results ---- */
+/* Results float over the highway, so the page never shifts when they appear. */
+.stage {
+  position: relative;
+}
+.results.overlay {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(760px, 100%);
+  z-index: 2;
+  background: var(--bg);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+}
+:root[data-style='blueprint'] .results.overlay {
+  box-shadow: none;
+  outline: 1px solid var(--accent);
+  outline-offset: 6px;
+}
 .results {
   display: flex;
   flex-wrap: wrap;
@@ -383,40 +505,6 @@
 :root[data-style='plain'] .diagram td.natural {
   font-weight: 600;
 }
-
-/* ---- Basics wait-mode grid ---- */
-.wait-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.wait-row {
-  display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  gap: 6px;
-}
-.wait-cell {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 40px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  font-size: 13px;
-  color: var(--muted);
-}
-:root[data-style='retro'] .wait-cell {
-  border-radius: 50%;
-  width: 40px;
-  justify-self: center;
-}
-.wait-cell.done {
-  background: var(--perfect);
-  border-color: var(--perfect);
-  color: var(--bg);
-}
-.wait-cell.now {
-  background: var(--next-bg);
-  border-color: var(--next-bg);
-  color: var(--next-fg);
+.judgment-slot.wide {
+  width: 300px;
 }

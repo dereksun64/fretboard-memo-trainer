@@ -1,39 +1,16 @@
-/* Plain utilitarian styling for the detection lab (#/lab) only.
-   Scoped under .lab with CSS nesting so it can't leak into the app. */
+/* Styling for the detection lab (#/lab) only, scoped under .lab with CSS
+   nesting so it can't leak into the game. */
 
-.lab {
-  min-height: 100vh;
+.lab-body {
 
+/* Same design tokens as the game (style + theme set on <html>), aliased to
+   the names this page was written with. */
 & {
-  --bg: #f6f6f4;
-  --card: #ffffff;
-  --text: #1c1c1e;
-  --muted: #6b6b70;
-  --border: #e2e2e0;
-  --accent: #3b5bdb;
-  --perfect: #2f9e44;
-  --good: #74b816;
-  --miss: #868e96;
-  --wrong: #e03131;
-  --pending: #e9ecef;
-  color-scheme: light;
-}
-
-@media (prefers-color-scheme: dark) {
-  & {
-    --bg: #141416;
-    --card: #1e1e21;
-    --text: #ececef;
-    --muted: #9a9aa2;
-    --border: #2e2e33;
-    --accent: #748ffc;
-    --perfect: #51cf66;
-    --good: #a9e34b;
-    --miss: #868e96;
-    --wrong: #ff6b6b;
-    --pending: #2a2a2e;
-    color-scheme: dark;
-  }
+  --text: var(--ink);
+  --card: color-mix(in srgb, var(--ink) 3%, var(--bg));
+  --border: var(--line);
+  --pending: var(--track);
+  font-family: var(--font-body);
 }
 
 * {
@@ -41,16 +18,14 @@
 }
 
 & {
-  margin: 0;
-  background: var(--bg);
   color: var(--text);
-  font: 15px/1.45 system-ui, -apple-system, sans-serif;
+  font: 15px/1.45 var(--font-body);
 }
 
 main {
   max-width: 1100px;
   margin: 0 auto;
-  padding: 24px 16px 64px;
+  padding: 24px 0 0;
 }
 
 h1 {
@@ -351,5 +326,39 @@ th {
   .beats {
     grid-template-columns: repeat(6, minmax(0, 1fr));
   }
+}
+
+.sync-track {
+  position: relative;
+  height: 56px;
+  margin: 6px 0 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sync-line {
+  position: absolute;
+  left: 15%;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  margin-left: -1.5px;
+  background: var(--accent);
+  opacity: 0.35;
+}
+
+.sync-line.flash {
+  opacity: 1;
+  width: 9px;
+  margin-left: -4.5px;
+}
+
+.sync-note {
+  position: absolute;
+  top: 50%;
+  width: 26px;
+  height: 26px;
+  margin: -13px 0 0 -13px;
+  border-radius: 50%;
+  border: 2px solid var(--text);
 }
 }

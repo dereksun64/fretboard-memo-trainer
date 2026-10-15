@@ -1,6 +1,6 @@
 // The fretboard chart Thomas says you may look at while practicing.
 
-import { OPEN_STRING_MIDI, STRINGS, type StringNum } from '../music/notes'
+import { OPEN_STRING_MIDI, STRING_NAME, STRINGS, type StringNum } from '../music/notes'
 import { Stripe, useStyle } from './decor'
 
 const NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
@@ -35,8 +35,8 @@ export function FretDiagram({ windowStart }: { windowStart: number }) {
           <tbody>
             {rows.map((s) => (
               <tr key={s}>
-                <th scope="row" className="label muted">
-                  S{s}
+                <th scope="row" className="label muted string-name">
+                  {STRING_NAME[s]}
                 </th>
                 {frets.map((f) => {
                   const name = NAMES[(OPEN_STRING_MIDI[s] + f) % 12]

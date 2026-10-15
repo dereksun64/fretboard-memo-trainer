@@ -114,8 +114,12 @@ For each beat, the app compares the detected note onset (after the latency offse
 ## Rhythm-game feel (keep it lean)
 
 **In:**
-- Six-lane highway, one lane per string, with string 6 at the bottom like tab.
-- Note cards labeled with the note name scroll toward a hit line.
+- Six-lane highway, one lane per string, labelled **e B G D A E** (high e on top, like tab). Prose says "high e" / "low E".
+- Note circles labelled with the note name scroll toward a hit line, with an **osu-style approach circle** shrinking onto each note as its beat nears.
+- Notes **keep sliding past the hit line and fade out** in their judgment colour (they never snap to a dot); at the end of a run the last note fades before the results appear.
+- A short **hit burst** on the hit line, styled per theme: a ring (Plain), a square selection box with corner handles (Blueprint), a double ripple (Retro). Reduced-motion users get no approach circles and non-scaling bursts.
+- **Fixed layout**: changing text (target note, string name, judgment, ms offset, combo, counts) sits in fixed-width slots, and results float over the highway, so nothing on the page shifts.
+- **Basics uses the same highway**: each correct note slides the next onto the hit line; a wrong note scrolls back to the start with a red burst.
 - Perfect / Good / Miss / Wrong judgments appear on each hit.
 - Combo counter.
 - Results screen: Cleared/Failed, accuracy, Perfect/Good counts, max combo.
@@ -163,6 +167,7 @@ One layout, the calm **Minimal** layout (direction B on the design canvas), with
   - Onsets without harmonic content (clicks, mutes) are dropped.
 - **Live tuner readout**: McLeod pitch method (`pitchy`).
 - **Tests**: synthetic plucked strings in `src/audio/analyzer.test.ts`, covering ringing notes, a weak-bass "laptop mic" high-pass, click bleed, quiet playing, every note on every string and up to 140 BPM.
+- **Visual sync**: the highway is drawn on the *heard* audio clock (`AudioContext.getOutputTimestamp`, falling back to `currentTime − outputLatency`), so the playhead lines up with the clicks you hear rather than the audio thread's render-ahead time. A per-device **visual delay** (lab → Visual sync, −150 to +350 ms) covers whatever the browser doesn't report, e.g. Bluetooth headphones.
 - **Metronome bleed** (built-in mic plus laptop speakers):
   - Use a short click with no clear pitch.
   - Ignore detection for about 30–50 ms around each scheduled click. The app knows the exact click times.

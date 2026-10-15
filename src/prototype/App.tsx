@@ -1,10 +1,12 @@
 import { useState } from 'react'
-import { AudioEngine } from '../audio/engine'
+import { getAudioEngine } from '../app/audio'
+import type { AudioEngine } from '../audio/engine'
 import { Calibration } from './Calibration'
 import { DetectorSettings } from './DetectorSettings'
 import { LivePanel } from './LivePanel'
 import { NoteLog } from './NoteLog'
 import { RunTest } from './RunTest'
+import { VisualSync } from './VisualSync'
 
 export function App() {
   const [engine, setEngine] = useState<AudioEngine | null>(null)
@@ -15,7 +17,7 @@ export function App() {
     setStarting(true)
     setError(null)
     try {
-      setEngine(await AudioEngine.start())
+      setEngine(await getAudioEngine())
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
     } finally {
@@ -26,10 +28,10 @@ export function App() {
   return (
     <main>
       <header>
-        <h1>Detection Prototype</h1>
+        <h1>Detection lab</h1>
         <p className="muted">
-          Checks whether the built-in mic can tell which note you played and when, before any real
-          UI is built.
+          See what the mic hears, check timing against the metronome, and calibrate input latency and
+          visual sync.
         </p>
       </header>
       {engine ? (
@@ -105,6 +107,7 @@ function Prototype({ engine }: { engine: AudioEngine }) {
       </section>
 
       <Calibration engine={engine} onBusy={() => setMetroOn(false)} />
+      <VisualSync engine={engine} onBusy={() => setMetroOn(false)} />
       <RunTest engine={engine} bpm={bpm} onBusy={() => setMetroOn(false)} />
       <NoteLog engine={engine} bpm={bpm} />
       <DetectorSettings engine={engine} />

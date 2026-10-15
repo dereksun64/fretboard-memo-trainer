@@ -1,16 +1,20 @@
 // Basics (Thomas's Exercise 1): wait mode. No metronome; each correct note
-// moves you along, a wrong one restarts the run. The diagram stays visible.
+// slides the next one onto the hit line, a wrong one scrolls the run back to
+// the start. The diagram stays visible.
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { getAudioEngine } from '../app/audio'
 import { navigate } from '../app/navigate'
+import { useFrameValue } from '../app/useNow'
 import type { AudioEngine } from '../audio/engine'
+import type { BeatResult, BeatTarget } from '../engine/judge'
 import { basicsDone, nextBasicsNote, type Progress } from '../engine/progress'
-import { REPS, singleNoteRun, type Step } from '../engine/sequence'
+import { singleNoteRun, type Step } from '../engine/sequence'
 import { feedWait, startWait, type WaitState } from '../engine/waitMode'
-import { NATURALS, expectedMidi, midiToName, type Natural } from '../music/notes'
+import { NATURALS, expectedMidi, midiToName, stringLabel, type Natural } from '../music/notes'
 import { SelectionBox, Stripe, Tag } from './decor'
 import { FretDiagram } from './FretDiagram'
+import { Highway, type Flash } from './Highway'
 import './play.css'
 
 interface Props {
@@ -20,6 +24,7 @@ interface Props {
 }
 
 interface Run {
+  id: number
   note: Natural
   counts: boolean
   steps: Step[]
@@ -31,6 +36,14 @@ export function Basics({ progress, windowStart, onRunCleared }: Props) {
   const [run, setRun] = useState<Run | null>(null)
   const [wait, setWait] = useState<WaitState>(startWait)
   const [wrong, setWrong] = useState<string | null>(null)
+  const [flashes, setFlashes] = useState<Flash[]>([])
+  // Show the result once the last note has slid past and faded.
+  const [showDone, setShowDone] = useState(false)
+  useEffect(() => {
+    if (!wait.done) return setShowDone(false)
+    const t = setTimeout(() => setShowDone(true), 700)
+    return () => clearTimeout(t)
+  }, [wait.done])
   const [error, setError] = useState<string | null>(null)
   const waitRef = useRef(wait)
   waitRef.current = wait
@@ -46,11 +59,16 @@ export function Basics({ progress, windowStart, onRunCleared }: Props) {
   useEffect(() => {
     if (!engine || !run) return
     return engine.onNote((ev) => {
-      const { state, outcome } = feedWait(waitRef.current, run.expected, ev.midi)
+      const prev = waitRef.current
+      const { state, outcome } = feedWait(prev, run.expected, ev.midi)
       if (outcome === 'done' && waitRef.current.done) return
       waitRef.current = state
       setWait(state)
-      if (outcome === 'wrong') setWrong(midiToName(ev.midi))
+      if (outcome === 'wrong') {
+        setWrong(midiToName(ev.midi))
+        const string = run.steps[prev.pos].string
+        setFlashes((f) => [...f.slice(-3), { id: Date.now(), string, judgment: 'wrong', at: performance.now() }])
+      }
       if (outcome === 'hit') setWrong(null)
       if (outcome === 'done') {
         setWrong(null)
@@ -67,7 +85,7 @@ export function Basics({ progress, windowStart, onRunCleared }: Props) {
       const queued = nextBasicsNote(progress)
       const note = queued ?? NATURALS[Math.floor(Math.random() * NATURALS.length)]
       const steps = singleNoteRun(note)
-      setRun({ note, counts: queued !== null, steps, expected: steps.map((s) => expectedMidi(s.note, s.string, windowStart)) })
+      setRun({ id: Date.now(), note, counts: queued !== null, steps, expected: steps.map((s) => expectedMidi(s.note, s.string, windowStart)) })
       const fresh = startWait()
       waitRef.current = fresh
       setWait(fresh)
@@ -121,7 +139,6 @@ export function Basics({ progress, windowStart, onRunCleared }: Props) {
   }
 
   const current = run.steps[Math.min(wait.pos, run.steps.length - 1)]
-  const perRep = run.steps.length / REPS
 
   return (
     <main className="page play">
@@ -132,41 +149,31 @@ export function Basics({ progress, windowStart, onRunCleared }: Props) {
             <span className="target-note display">{run.note}</span>
           </SelectionBox>
           <div className="target-side">
-            <span className="target-string">{wait.done ? 'run cleared' : `string ${current.string}`}</span>
+            <span className="target-string">{wait.done ? 'run cleared' : `${stringLabel(current.string)} string`}</span>
             <Stripe width={96} />
           </div>
         </div>
         <div className="feedback" aria-live="polite">
-          {wrong && (
-            <span className="judgment">
-              <Tag>Wrong</Tag>
-              <span className="muted">heard {wrong}, starting the run again</span>
-            </span>
-          )}
-          <span className="muted">
+          <span className="judgment-slot wide">
+            {wrong && (
+              <>
+                <Tag>Wrong</Tag>
+                <span className="muted">
+                  heard <span className="mono">{wrong}</span>, starting over
+                </span>
+              </>
+            )}
+          </span>
+          <span className="combo-slot muted">
             <span className="combo display">{wait.pos}</span> / {run.steps.length}
           </span>
         </div>
       </section>
 
-      <div className="wait-grid" aria-label="Run steps">
-        {Array.from({ length: REPS }, (_, r) => (
-          <div key={r} className="wait-row">
-            {run.steps.slice(r * perRep, (r + 1) * perRep).map((s, i) => {
-              const idx = r * perRep + i
-              const state = idx < wait.pos ? 'done' : idx === wait.pos && !wait.done ? 'now' : ''
-              return (
-                <span key={idx} className={`wait-cell ${state}`}>
-                  <span className="label">S{s.string}</span>
-                </span>
-              )
-            })}
-          </div>
-        ))}
-      </div>
-
-      {wait.done && (
-        <section className="results">
+      <div className="stage">
+        <BasicsHighway key={run.id} steps={run.steps} wait={wait} flashes={flashes} />
+        {showDone && (
+        <section className="results overlay">
           <div className="results-main">
             <span className="results-title display cleared">Run cleared</span>
             <span className="muted">
@@ -190,8 +197,42 @@ export function Basics({ progress, windowStart, onRunCleared }: Props) {
           </div>
         </section>
       )}
+      </div>
 
       <FretDiagram windowStart={windowStart} />
     </main>
+  )
+}
+
+/**
+ * The highway in wait mode: positions instead of seconds. The "clock" eases
+ * toward the next note's index, so each correct note slides the run along
+ * and a restart scrolls back to the start.
+ */
+function BasicsHighway({ steps, wait, flashes }: { steps: Step[]; wait: WaitState; flashes: Flash[] }) {
+  const pos = useRef(0)
+  const last = useRef(performance.now())
+  const target = wait.done ? steps.length : wait.pos
+  const now = useFrameValue(() => {
+    const t = performance.now()
+    const dt = Math.min(0.1, (t - last.current) / 1000)
+    last.current = t
+    pos.current += (target - pos.current) * (1 - Math.exp(-dt * 12))
+    if (Math.abs(target - pos.current) < 0.002) pos.current = target
+    return pos.current
+  })
+  const beats = useMemo<BeatTarget[]>(() => steps.map((_, i) => ({ time: i, expectedMidi: 0 })), [steps])
+  const results: BeatResult[] = steps.map((_, i) => ({ judgment: i < target ? 'perfect' : 'pending' }))
+  return (
+    <Highway
+      steps={steps}
+      beats={beats}
+      results={results}
+      now={now}
+      spb={1}
+      next={wait.done ? -1 : wait.pos}
+      approachCircles={false}
+      flashes={flashes}
+    />
   )
 }

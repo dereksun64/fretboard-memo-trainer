@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { Settings, Style, Theme } from '../app/settings'
+import type { Settings } from '../app/settings'
 import { EXERCISES } from '../engine/pools'
 import {
   DEFAULT_INCREASE,
@@ -17,6 +17,7 @@ import {
   poolSize,
   type Progress,
 } from '../engine/progress'
+import { AppearanceControls } from './AppearanceControls'
 import { SelectionBox, Stripe, Tag, useStyle } from './decor'
 import { EXERCISE_INFO, exerciseCode } from './exercises'
 import './home.css'
@@ -27,13 +28,6 @@ interface Props {
   onSettings: (patch: Partial<Settings>) => void
   onIncreaseBpm: (delta: number) => void
 }
-
-const STYLES: [Style, string][] = [
-  ['plain', 'Plain'],
-  ['blueprint', 'Blueprint'],
-  ['retro', 'Retro'],
-]
-const NEXT_THEME: Record<Theme, Theme> = { system: 'light', light: 'dark', dark: 'system' }
 
 export function Home({ progress, settings, onSettings, onIncreaseBpm }: Props) {
   const style = useStyle()
@@ -51,36 +45,7 @@ export function Home({ progress, settings, onSettings, onIncreaseBpm }: Props) {
           {style === 'blueprint' && <span className="label muted">Trainer</span>}
           <Stripe width={108} />
         </div>
-        <div className="head-controls">
-          <div className="segmented" role="group" aria-label="Style">
-            {STYLES.map(([value, label]) => (
-              <button
-                key={value}
-                type="button"
-                className="seg"
-                aria-pressed={settings.style === value}
-                onClick={() => onSettings({ style: value })}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-          <button
-            type="button"
-            className="btn ghost"
-            onClick={() => onSettings({ theme: NEXT_THEME[settings.theme] })}
-            aria-label={`Theme: ${settings.theme}. Switch theme`}
-            title={`Theme: ${settings.theme}`}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
-              <circle cx="12" cy="12" r="8" />
-              <path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor" />
-            </svg>
-            <span className="label muted" style={{ fontSize: 13 }}>
-              {settings.theme}
-            </span>
-          </button>
-        </div>
+        <AppearanceControls settings={settings} onSettings={onSettings} />
       </header>
 
       <section className="level">

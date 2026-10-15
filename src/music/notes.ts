@@ -32,6 +32,14 @@ export function isNatural(name: NoteName): name is Natural {
 
 export const STRINGS: readonly StringNum[] = [6, 5, 4, 3, 2, 1]
 
+/** Tab-style string names: low E, A, D, G, B, high e. */
+export const STRING_NAME: Record<StringNum, string> = { 6: 'E', 5: 'A', 4: 'D', 3: 'G', 2: 'B', 1: 'e' }
+
+/** String name for prose, telling the two E strings apart. */
+export function stringLabel(s: StringNum): string {
+  return s === 6 ? 'low E' : s === 1 ? 'high e' : STRING_NAME[s]
+}
+
 // Standard tuning, MIDI numbers of the open strings.
 export const OPEN_STRING_MIDI: Record<StringNum, number> = {
   6: 40, // E2

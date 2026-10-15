@@ -7,6 +7,7 @@ import { Metronome } from './metronome'
 type NoteListener = (ev: NoteEvent) => void
 
 const LATENCY_KEY = 'fmt.latencyMs'
+const VISUAL_KEY = 'fmt.visualOffsetMs'
 
 export class AudioEngine {
   readonly ctx: AudioContext
@@ -16,12 +17,15 @@ export class AudioEngine {
   private stream: MediaStream | null = null
   /** Measured input+output latency in ms; subtract from onset times. */
   latencyMs: number
+  /** Extra delay for visuals in ms, tuned by eye in the lab's visual sync check. */
+  visualOffsetMs: number
 
   private constructor(ctx: AudioContext) {
     this.ctx = ctx
     this.metronome = new Metronome(ctx)
     this.analyzer = new NoteAnalyzer(ctx.sampleRate, DEFAULT_SETTINGS)
-    this.latencyMs = loadLatency()
+    this.latencyMs = loadNumber(LATENCY_KEY)
+    this.visualOffsetMs = loadNumber(VISUAL_KEY)
   }
 
   /** Must be called from a user gesture (browser autoplay rules). */
@@ -63,6 +67,24 @@ export class AudioEngine {
     return this.stream?.getAudioTracks()[0]?.label ?? ''
   }
 
+  /**
+   * The audio-clock time you are hearing right now. `ctx.currentTime` runs
+   * ahead of the speakers by the output latency (larger with Bluetooth), so
+   * anything drawn in time with the metronome should use this instead, plus
+   * the user's visual offset.
+   */
+  displayTime(): number {
+    const ctx = this.ctx
+    let heard: number
+    const ts = typeof ctx.getOutputTimestamp === 'function' ? ctx.getOutputTimestamp() : null
+    if (ts?.contextTime && ts.performanceTime) {
+      heard = ts.contextTime + (performance.now() - ts.performanceTime) / 1000
+    } else {
+      heard = ctx.currentTime - (ctx.outputLatency || 0) - (ctx.baseLatency || 0)
+    }
+    return heard - this.visualOffsetMs / 1000
+  }
+
   /** Onset time corrected for measured latency. */
   corrected(ev: NoteEvent): number {
     return ev.time - this.latencyMs / 1000
@@ -77,19 +99,28 @@ export class AudioEngine {
 
   setLatency(ms: number) {
     this.latencyMs = ms
-    try {
-      localStorage.setItem(LATENCY_KEY, String(ms))
-    } catch {
-      // storage unavailable; keep it for this session only
-    }
+    saveNumber(LATENCY_KEY, ms)
+  }
+
+  setVisualOffset(ms: number) {
+    this.visualOffsetMs = ms
+    saveNumber(VISUAL_KEY, ms)
   }
 }
 
-function loadLatency(): number {
+function loadNumber(key: string): number {
   try {
-    const v = Number(localStorage.getItem(LATENCY_KEY))
+    const v = Number(localStorage.getItem(key))
     return Number.isFinite(v) ? v : 0
   } catch {
     return 0
+  }
+}
+
+function saveNumber(key: string, v: number) {
+  try {
+    localStorage.setItem(key, String(v))
+  } catch {
+    // storage unavailable; keep it for this session only
   }
 }

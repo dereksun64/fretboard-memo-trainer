@@ -4,8 +4,11 @@ import type { ExerciseId } from '../engine/pools'
 import { loadProgress, saveProgress } from '../engine/storage'
 import { App as Lab } from '../prototype/App'
 import { Basics } from '../ui/Basics'
+import { AppearanceControls } from '../ui/AppearanceControls'
 import { StyleContext } from '../ui/decor'
 import { Home } from '../ui/Home'
+import '../ui/home.css'
+import '../ui/play.css'
 import { Play } from '../ui/Play'
 import { useSettings } from './settings'
 
@@ -48,9 +51,22 @@ export function App() {
 
   if (route.name === 'lab') {
     return (
-      <div className="lab">
-        <Lab />
-      </div>
+      <StyleContext.Provider value={settings.style}>
+        <div className="app lab">
+          <header className="lab-bar">
+            <a href="#/" className="back">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" aria-hidden="true">
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+              <span className="back-name">Exercises</span>
+            </a>
+            <AppearanceControls settings={settings} onSettings={updateSettings} />
+          </header>
+          <div className="lab-body">
+            <Lab />
+          </div>
+        </div>
+      </StyleContext.Provider>
     )
   }
 
