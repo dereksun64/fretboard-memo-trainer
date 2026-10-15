@@ -1,0 +1,250 @@
+/* Design tokens. One layout, three styles (plain / blueprint / retro), each
+   in light and dark. <html data-style="…" data-theme="light|dark"> picks the
+   set; components only ever use the variables. */
+
+:root {
+  --gutter: 40px;
+  --lane-h: 52px;
+}
+
+/* ---- Plain ---- */
+:root[data-style='plain'] {
+  --font-body: 'Geist', system-ui, sans-serif;
+  --font-display: 'Geist', system-ui, sans-serif;
+  --font-label: 'Geist', system-ui, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, monospace;
+  --display-weight: 600;
+  --label-case: none;
+  --label-tracking: 0;
+  --radius: 8px;
+  --texture: none;
+  --texture-size: auto;
+}
+:root[data-style='plain'][data-theme='light'] {
+  --bg: #fafaf9; --ink: #141414; --muted: #6b6b6b; --line: #e6e6e3; --string: #d2d2ce;
+  --accent: #2d5bff; --accent-ink: #2d5bff; --on-accent: #ffffff;
+  --perfect: #2d5bff; --good: #8fa8ff; --miss: #b5b5b0; --wrong: #e8590c;
+  --note-bg: #fafaf9; --note-ring: #141414; --note-fg: #141414; --next-bg: #141414; --next-fg: #fafaf9;
+  --note-grooves: none; --sharp: #767672; --track: #e6e6e3;
+  color-scheme: light;
+}
+:root[data-style='plain'][data-theme='dark'] {
+  --bg: #0f1011; --ink: #ededec; --muted: #9a9b9e; --line: #26282b; --string: #34363a;
+  --accent: #7d9bff; --accent-ink: #7d9bff; --on-accent: #0f1011;
+  --perfect: #7d9bff; --good: #3f5199; --miss: #4a4c50; --wrong: #ff8a4c;
+  --note-bg: #0f1011; --note-ring: #ededec; --note-fg: #ededec; --next-bg: #ededec; --next-fg: #0f1011;
+  --note-grooves: none; --sharp: #86888c; --track: #26282b;
+  color-scheme: dark;
+}
+
+/* ---- Blueprint ---- */
+:root[data-style='blueprint'] {
+  --font-body: 'Barlow', system-ui, sans-serif;
+  --font-display: 'Bodoni Moda', Georgia, serif;
+  --font-label: 'Barlow Condensed', system-ui, sans-serif;
+  --font-mono: 'Barlow Condensed', system-ui, sans-serif;
+  --display-weight: 600;
+  --label-case: uppercase;
+  --label-tracking: 0.1em;
+  --radius: 0;
+  --texture: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  --texture-size: 64px 64px;
+}
+:root[data-style='blueprint'][data-theme='light'] {
+  --bg: #f7f8fa; --grid: rgba(36, 70, 150, 0.07); --ink: #111318; --muted: #5a6170; --line: rgba(17, 19, 24, 0.14);
+  --string: rgba(17, 19, 24, 0.3); --accent: #1f43e0; --accent-ink: #1f43e0; --on-accent: #ffffff;
+  --perfect: #1f43e0; --good: #a35f00; --miss: #9aa1ad; --wrong: #d4213f;
+  --note-bg: #f7f8fa; --note-ring: #111318; --note-fg: #111318; --next-bg: #111318; --next-fg: #f7f8fa;
+  --note-grooves: none; --sharp: #6b7280; --track: rgba(17, 19, 24, 0.12);
+  color-scheme: light;
+}
+:root[data-style='blueprint'][data-theme='dark'] {
+  --bg: #111317; --grid: rgba(140, 170, 255, 0.06); --ink: #eef1f6; --muted: #9aa3b2; --line: rgba(238, 241, 246, 0.14);
+  --string: rgba(238, 241, 246, 0.3); --accent: #7d96ff; --accent-ink: #7d96ff; --on-accent: #0b0d12;
+  --perfect: #7d96ff; --good: #f2b33d; --miss: #4e5563; --wrong: #ff6b7f;
+  --note-bg: #111317; --note-ring: #eef1f6; --note-fg: #eef1f6; --next-bg: #eef1f6; --next-fg: #111317;
+  --note-grooves: none; --sharp: #8790a0; --track: rgba(238, 241, 246, 0.12);
+  color-scheme: dark;
+}
+
+/* ---- Retro ---- */
+:root[data-style='retro'] {
+  --font-body: 'Jost', system-ui, sans-serif;
+  --font-display: 'Jost', system-ui, sans-serif;
+  --font-label: 'Oswald', system-ui, sans-serif;
+  --font-mono: 'DotGothic16', ui-monospace, monospace;
+  --display-weight: 800;
+  --label-case: uppercase;
+  --label-tracking: 0.08em;
+  --radius: 999px;
+  --stripe-1: #802520; --stripe-2: #ba8530; --stripe-3: #5c7f71; --stripe-4: #b2653b;
+}
+:root[data-style='retro'][data-theme='light'] {
+  --bg: #f2e9d6; --texture: radial-gradient(rgba(24, 24, 24, 0.05) 1px, transparent 1.2px); --texture-size: 22px 22px;
+  --ink: #181818; --muted: #5e5548; --line: rgba(24, 24, 24, 0.16); --string: rgba(24, 24, 24, 0.4);
+  --accent: #b2653b; --accent-ink: #9a5230; --on-accent: #181818;
+  --perfect: #5c7f71; --good: #ba8530; --miss: #a39886; --wrong: #802520;
+  --note-bg: #181818; --note-ring: #181818; --note-fg: #f5eddc; --next-bg: #b2653b; --next-fg: #181818;
+  --note-grooves: inset 0 0 0 3px var(--note-bg), inset 0 0 0 4px rgba(245, 237, 220, 0.3), inset 0 0 0 7px var(--note-bg), inset 0 0 0 8px rgba(245, 237, 220, 0.3);
+  --sharp: #5e5548; --track: rgba(24, 24, 24, 0.08);
+  color-scheme: light;
+}
+:root[data-style='retro'][data-theme='dark'] {
+  --bg: #141414; --texture: repeating-linear-gradient(0deg, rgba(245, 237, 220, 0.025) 0 1px, transparent 1px 4px); --texture-size: auto;
+  --ink: #efe6d3; --muted: #a69c8b; --line: rgba(239, 230, 211, 0.16); --string: rgba(239, 230, 211, 0.36);
+  --accent: #d27c49; --accent-ink: #d27c49; --on-accent: #141414;
+  --perfect: #7fa696; --good: #d9a443; --miss: #5a554d; --wrong: #c0473d;
+  --note-bg: #0b0b0b; --note-ring: #0b0b0b; --note-fg: #f5eddc; --next-bg: #d27c49; --next-fg: #181818;
+  --note-grooves: inset 0 0 0 3px var(--note-bg), inset 0 0 0 4px rgba(239, 230, 211, 0.3), inset 0 0 0 7px var(--note-bg), inset 0 0 0 8px rgba(239, 230, 211, 0.3);
+  --sharp: #a69c8b; --track: rgba(239, 230, 211, 0.08);
+  --stripe-4: #d27c49;
+  color-scheme: dark;
+}
+
+/* ---- Base ---- */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+.app {
+  min-height: 100vh;
+  background-color: var(--bg);
+  background-image: var(--texture);
+  background-size: var(--texture-size);
+  color: var(--ink);
+  font: 15px/1.45 var(--font-body);
+  padding: 28px var(--gutter) 56px;
+}
+
+.page {
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.label {
+  font-family: var(--font-label);
+  text-transform: var(--label-case);
+  letter-spacing: var(--label-tracking);
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.display {
+  font-family: var(--font-display);
+  font-weight: var(--display-weight);
+}
+
+.btn {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+}
+.btn:hover:not(:disabled) {
+  border-color: var(--ink);
+}
+.btn.primary {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--bg);
+}
+.btn:disabled {
+  cursor: not-allowed;
+  color: var(--muted);
+  border-style: dashed;
+}
+.btn.ghost {
+  border-color: transparent;
+}
+.btn:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+a {
+  color: inherit;
+}
+
+.rule {
+  border-top: 1px solid var(--line);
+}
+
+/* Blueprint selection box with square corner handles. */
+.sel {
+  position: relative;
+  outline: 1px solid var(--accent);
+  outline-offset: 6px;
+}
+.sel > .handle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: var(--accent);
+}
+
+/* Blueprint / retro tags. */
+.tag {
+  display: inline-block;
+  padding: 1px 8px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-family: var(--font-label);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Retro four-colour stripe. */
+.stripe {
+  display: flex;
+  height: 5px;
+}
+.stripe > span {
+  flex: 1;
+}
+.stripe > span:nth-child(1) { background: var(--stripe-1); }
+.stripe > span:nth-child(2) { background: var(--stripe-2); }
+.stripe > span:nth-child(3) { background: var(--stripe-3); }
+.stripe > span:nth-child(4) { background: var(--stripe-4); }
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  :root {
+    --gutter: 16px;
+  }
+}

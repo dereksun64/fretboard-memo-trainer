@@ -1,5 +1,8 @@
 // Rhythm-mode judging: match detected note events to metronome beats.
 
+import { expectedMidi } from '../music/notes'
+import type { Step } from './sequence'
+
 export type Judgment = 'perfect' | 'good' | 'miss' | 'wrong'
 
 export interface BeatTarget {
@@ -61,4 +64,52 @@ export function judgeBeats(
     if (note.midi !== beat.expectedMidi) return { judgment: 'wrong', ...result }
     return { judgment: Math.abs(offset) <= perfect ? 'perfect' : 'good', ...result }
   })
+}
+
+/** Beat targets for a run whose first note lands at `firstBeat` seconds. */
+export function beatTargets(
+  steps: readonly Step[],
+  firstBeat: number,
+  bpm: number,
+  windowStart = 1,
+): BeatTarget[] {
+  const spb = 60 / bpm
+  return steps.map((s, i) => ({ time: firstBeat + i * spb, expectedMidi: expectedMidi(s.note, s.string, windowStart) }))
+}
+
+export interface RunSummary {
+  /** Zero misses and zero wrong notes. Only meaningful once nothing is pending. */
+  cleared: boolean
+  finished: boolean
+  perfect: number
+  good: number
+  miss: number
+  wrong: number
+  /** Perfect counts 1, Good 0.9, Miss and Wrong 0; over judged beats (0-100). */
+  accuracy: number
+  combo: number
+  maxCombo: number
+}
+
+export function summarize(results: readonly BeatResult[]): RunSummary {
+  const s = { perfect: 0, good: 0, miss: 0, wrong: 0 }
+  let combo = 0
+  let maxCombo = 0
+  let judged = 0
+  for (const r of results) {
+    if (r.judgment === 'pending') break
+    judged++
+    s[r.judgment]++
+    combo = r.judgment === 'perfect' || r.judgment === 'good' ? combo + 1 : 0
+    maxCombo = Math.max(maxCombo, combo)
+  }
+  const finished = judged === results.length
+  return {
+    ...s,
+    cleared: finished && s.miss === 0 && s.wrong === 0,
+    finished,
+    accuracy: judged ? Math.round(((s.perfect + 0.9 * s.good) / judged) * 1000) / 10 : 0,
+    combo,
+    maxCombo,
+  }
 }
