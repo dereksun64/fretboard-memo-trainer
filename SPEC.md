@@ -104,7 +104,11 @@ For each beat, the app compares the detected note onset (after the latency offse
 - **Wrong** = an onset inside the window with the wrong pitch.
 - **Cleared** = zero Wrong and zero Miss. Perfect and Good both count as clean.
 - **Accuracy** = (Perfect + 0.9 × Good) ÷ judged beats. **Combo** counts consecutive Perfect/Good and resets on Miss or Wrong.
-- A failed run **keeps playing to the end** so the practice still counts as reps. The results screen then shows *Failed*. *(Default; could instead stop immediately.)*
+- **First Miss pauses the run**: the metronome stops, a soft error sound plays, and a popup offers **Restart run** (suggested, focused) or **Continue**, with a small *Calibrate in lab →* link.
+  - *Restart* replays the same run from the top; the abandoned attempt isn't recorded.
+  - *Continue* resumes from the next note after a 2-click count-in; notes played during the pause are ignored. The run still ends *Failed* and is recorded as a fail.
+  - Only once per run, and not when the miss is the last beat (the results show instead).
+- A **Wrong** note fails the run without pausing; it keeps playing to the end so the practice still counts as reps, then shows *Failed*.
 
 **Pitch matching:**
 - The expected pitch is the exact note, octave included, of the target note on the target string within the active 12-fret window.

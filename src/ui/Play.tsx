@@ -8,6 +8,7 @@ import { navigate } from '../app/navigate'
 import { useFrameValue } from '../app/useNow'
 import type { AudioEngine } from '../audio/engine'
 import { runAccents } from '../audio/metronome'
+import { playMissSound } from '../audio/sfx'
 import { beatTargets, hitWindowMs, judgeBeats, summarize, type BeatTarget, type PlayedNote, type RunSummary } from '../engine/judge'
 import { drawPool, type ExerciseId, type PoolItem } from '../engine/pools'
 import { clearedCount, isUnlocked, nextItem, poolSize, type Progress } from '../engine/progress'
@@ -20,6 +21,7 @@ import { Highway } from './Highway'
 import './play.css'
 
 const COUNT_IN = 4
+const RESUME_COUNT_IN = 2 // clicks before play picks up again after Continue
 const LEAD = 0.4 // seconds between pressing start and the first click
 
 interface Props {
@@ -70,13 +72,14 @@ export function Play({ exercise, progress, windowStart, onRunFinished }: Props) 
     return () => removeEventListener('keydown', onKey)
   }, [])
 
-  const start = async () => {
+  /** Start a run: the next one from the pool, or `retry` to play the same run again. */
+  const beginRun = async (retry?: { item: PoolItem; counts: boolean }) => {
     setError(null)
     try {
       const e = engine ?? (await getAudioEngine())
       setEngine(e)
-      const queued = nextItem(progress, exercise)
-      const item = queued ?? drawPool(exercise, Math.random)[0]
+      const queued = retry ? (retry.counts ? retry.item : null) : nextItem(progress, exercise)
+      const item = retry?.item ?? queued ?? drawPool(exercise, Math.random)[0]
       const steps = runSteps(item)
       const bpm = progress.level
       const spb = 60 / bpm
@@ -102,6 +105,7 @@ export function Play({ exercise, progress, windowStart, onRunFinished }: Props) 
       setError(err instanceof Error ? err.message : String(err))
     }
   }
+  const start = () => beginRun()
 
   const header = (
     <div className="play-head">
@@ -177,6 +181,7 @@ export function Play({ exercise, progress, windowStart, onRunFinished }: Props) 
           if (run.counts) onRunFinished(s.cleared)
         }}
         onNext={start}
+        onRestart={() => beginRun({ item: run.item, counts: run.counts })}
         progressNote={
           run.counts
             ? `${clearedCount(progress, exercise)} of ${poolSize(progress, exercise)} runs cleared at ${run.bpm} BPM.`
@@ -195,18 +200,31 @@ interface RunViewProps {
   onToggleDiagram: () => void
   onFinished: (s: RunSummary) => void
   onNext: () => void
+  /** Play the same run again from the top (the abandoned attempt isn't recorded). */
+  onRestart: () => void
   progressNote: string
 }
 
-function RunView({ run, engine, diagram, windowStart, onToggleDiagram, onFinished, onNext, progressNote }: RunViewProps) {
+function RunView({ run, engine, diagram, windowStart, onToggleDiagram, onFinished, onNext, onRestart, progressNote }: RunViewProps) {
   const finishedRef = useRef(false)
   const [summary, setSummary] = useState<RunSummary | null>(null)
+  // Beat times can move: Continue after a miss shifts the remaining beats.
+  const [beats, setBeats] = useState(run.beats)
+  // While the miss popup is up, the run is frozen at this moment.
+  const [paused, setPaused] = useState<{ at: number; missed: number } | null>(null)
+  const missPrompted = useRef(false)
+  // The count-in currently shown: the run's opening one, or a short one after Continue.
+  const [countInTo, setCountInTo] = useState({ time: run.firstBeat, clicks: COUNT_IN })
   // Draw on the clock you're hearing (not the one the audio thread is
   // rendering ahead), and keep animating after the run ends so the last notes
   // slide past and fade.
-  const now = useFrameValue(() => engine.displayTime())
+  const clock = useFrameValue(() => engine.displayTime())
+  const now = paused ? paused.at : clock
 
-  const results = judgeBeats(run.beats, run.played, run.bpm, now)
+  // While paused, ignore anything played after the pause: those beats get
+  // moved later on Continue and must be played again then.
+  const played = paused ? run.played.filter((n) => n.time <= paused.at) : run.played
+  const results = judgeBeats(beats, played, run.bpm, now)
   const live = summarize(results)
 
   useEffect(() => {
@@ -214,20 +232,53 @@ function RunView({ run, engine, diagram, windowStart, onToggleDiagram, onFinishe
       finishedRef.current = true
       setSummary(live)
       onFinished(live)
+      return
+    }
+    // First miss mid-run: stop, play a soft error sound and ask what to do.
+    const missed = results.findIndex((r) => r.judgment === 'miss')
+    if (missed !== -1 && !missPrompted.current && !live.finished) {
+      missPrompted.current = true
+      engine.metronome.stop()
+      playMissSound(engine.ctx)
+      setPaused({ at: now, missed })
     }
   })
+
+  /** Pick up from the next note after a short count-in; the run stays failed. */
+  const resume = () => {
+    const from = results.findIndex((r) => r.judgment === 'pending')
+    setPaused(null)
+    if (from === -1) return
+    const t0 = engine.ctx.currentTime + LEAD
+    const nextTime = t0 + RESUME_COUNT_IN * run.spb
+    const shift = nextTime - beats[from].time
+    setBeats(beats.map((b, i) => (i >= from ? { ...b, time: b.time + shift } : b)))
+    setCountInTo({ time: nextTime, clicks: RESUME_COUNT_IN })
+    engine.metronome.start(run.bpm, {
+      startTime: t0,
+      beats: RESUME_COUNT_IN + (beats.length - from),
+      // first count-in click, then the start of each 6-string pass as before
+      accent: (i) => i === 0 || (i >= RESUME_COUNT_IN && (from + i - RESUME_COUNT_IN) % 6 === 0),
+    })
+    if (import.meta.env.DEV) {
+      Object.assign(window, { __fmtResume: { from, nextTime, spb: run.spb, now: () => engine.ctx.currentTime } })
+    }
+  }
 
   const next = results.findIndex((r) => r.judgment === 'pending')
   const lastIdx = next === -1 ? results.length - 1 : next - 1
   const last = lastIdx >= 0 && results[lastIdx].judgment !== 'pending' ? results[lastIdx] : null
-  const countIn = now < run.firstBeat - run.spb / 2 ? Math.min(COUNT_IN, Math.ceil((run.firstBeat - now) / run.spb)) : 0
+  const countIn =
+    !paused && now < countInTo.time - run.spb / 2
+      ? Math.min(countInTo.clicks, Math.ceil((countInTo.time - now) / run.spb))
+      : 0
   const target = run.steps[next === -1 ? run.steps.length - 1 : next]
   const perRep = run.steps.length / REPS
   const beatNo = next === -1 ? run.steps.length : next + 1
   const rep = Math.min(REPS, Math.floor((beatNo - 1) / perRep) + 1)
   const heard = engine.livePitch.midi
   // Results wait until the last note has slid past the hit line and faded.
-  const lastBeat = run.beats[run.beats.length - 1].time
+  const lastBeat = beats[beats.length - 1].time
   const showResults = summary !== null && now > lastBeat + run.spb + 0.15
 
   return (
@@ -279,7 +330,31 @@ function RunView({ run, engine, diagram, windowStart, onToggleDiagram, onFinishe
       </section>
 
       <div className="stage">
-        <Highway steps={run.steps} beats={run.beats} results={results} now={now} spb={run.spb} next={next} />
+        <Highway steps={run.steps} beats={beats} results={results} now={now} spb={run.spb} next={next} />
+        {paused && (
+          <section className="results overlay miss-prompt" role="alertdialog" aria-labelledby="miss-title" aria-describedby="miss-desc">
+            <div className="results-main">
+              <span id="miss-title" className="results-title display failed">
+                Missed a note
+              </span>
+              <span id="miss-desc" className="muted">
+                {run.steps[paused.missed].note} on the {stringLabel(run.steps[paused.missed].string)} string didn't come in on
+                the beat, so this run won't clear.
+              </span>
+            </div>
+            <div className="results-actions">
+              <button type="button" className="btn primary" onClick={onRestart} autoFocus>
+                Restart run
+              </button>
+              <button type="button" className="btn" onClick={resume}>
+                Continue
+              </button>
+            </div>
+            <a className="overlay-foot muted" href="#/lab">
+              Calibrate in lab →
+            </a>
+          </section>
+        )}
         {showResults && summary && (
           <section className="results overlay" aria-live="assertive">
             <div className="results-main">
