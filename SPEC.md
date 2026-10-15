@@ -184,6 +184,13 @@ One layout, the calm **Minimal** layout (direction B on the design canvas), with
 4. **Onboarding** (mic check, tuner, latency calibration in-app instead of the lab) and a settings screen (fret window, metronome volume).
 5. **Practice mode**, a proper Increase BPM celebration (the basic increase flow already works), and pause instead of stop.
 
+## Hosting
+
+- Static site on **Vercel**: production from `main`, a preview URL for every branch and PR. HTTPS is required for the mic.
+- `vercel.json`: immutable caching for `/assets/*`, `Permissions-Policy: microphone=(self)`.
+- Share previews (`og:image` etc.) use `SITE_URL` or Vercel's production domain.
+- Launch pages: `#/about` (method, setup tips, privacy note). Mic-permission errors explain how to allow the mic.
+
 ## Out of scope for now
 
 - Weak-note drills or anything beyond Thomas's method.

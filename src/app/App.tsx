@@ -3,6 +3,7 @@ import { canIncreaseBpm, increaseBpm, recordBasicsClear, recordRun, type Progres
 import type { ExerciseId } from '../engine/pools'
 import { loadProgress, saveProgress } from '../engine/storage'
 import { App as Lab } from '../prototype/App'
+import { About } from '../ui/About'
 import { Basics } from '../ui/Basics'
 import { AppearanceControls } from '../ui/AppearanceControls'
 import { StyleContext } from '../ui/decor'
@@ -12,12 +13,18 @@ import '../ui/play.css'
 import { Play } from '../ui/Play'
 import { useSettings } from './settings'
 
-type Route = { name: 'home' } | { name: 'basics' } | { name: 'play'; exercise: ExerciseId } | { name: 'lab' }
+type Route =
+  | { name: 'home' }
+  | { name: 'basics' }
+  | { name: 'play'; exercise: ExerciseId }
+  | { name: 'lab' }
+  | { name: 'about' }
 
 function parseRoute(hash: string): Route {
   const path = hash.replace(/^#\/?/, '')
   if (path === 'basics') return { name: 'basics' }
   if (path === 'lab') return { name: 'lab' }
+  if (path === 'about') return { name: 'about' }
   const m = /^play\/([1-4])$/.exec(path)
   if (m) return { name: 'play', exercise: Number(m[1]) as ExerciseId }
   return { name: 'home' }
@@ -83,6 +90,7 @@ export function App() {
             }}
           />
         )}
+        {route.name === 'about' && <About />}
         {route.name === 'basics' && (
           <Basics
             progress={progress}
