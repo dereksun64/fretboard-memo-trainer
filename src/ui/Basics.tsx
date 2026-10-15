@@ -131,7 +131,11 @@ export function Basics({ progress, windowStart, onRunCleared }: Props) {
               Start
             </button>
           </div>
-          {error && <p style={{ color: 'var(--wrong)' }}>Couldn't open the microphone: {error}</p>}
+          {error && (
+            <p role="alert" style={{ color: 'var(--wrong)' }}>
+              {error}
+            </p>
+          )}
         </section>
         <FretDiagram windowStart={windowStart} />
       </main>

@@ -158,8 +158,13 @@ export function Home({ progress, settings, onSettings, onIncreaseBpm }: Props) {
         })}
       </section>
 
-      <footer className="muted" style={{ fontSize: 13 }}>
-        Mic timing off? Run latency calibration in the <a href="#/lab">detection lab</a>.
+      <footer className="home-foot muted">
+        <span>
+          Timing off? Calibrate in the <a href="#/lab">detection lab</a>.
+        </span>
+        <span>
+          <a href="#/about">About</a> · <a href="#/about">Your audio never leaves this device</a>
+        </span>
       </footer>
     </main>
   )

@@ -3,7 +3,33 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Fretboard Trainer</title>
+    <title>Fretboard Trainer · Learn every note on the guitar</title>
+    <meta
+      name="description"
+      content="Memorize every note on the guitar fretboard with five minutes a day of play-along exercises. Your mic checks each note in the browser; nothing is recorded or uploaded."
+    />
+    <meta name="theme-color" content="#fafaf9" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0f1011" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Fretboard Trainer" />
+    <meta property="og:title" content="Fretboard Trainer · Learn every note on the guitar" />
+    <meta
+      property="og:description"
+      content="Five minutes a day of play-along exercises. Your mic checks each note, right in the browser."
+    />
+    <meta property="og:url" content="%SITE_URL%/" />
+    <meta property="og:image" content="%SITE_URL%/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="Fretboard Trainer: six guitar strings with note circles scrolling toward a hit line"
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -12,6 +38,7 @@
     />
   </head>
   <body>
+    <noscript>Fretboard Trainer needs JavaScript to run.</noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
