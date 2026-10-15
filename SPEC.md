@@ -135,7 +135,7 @@ One layout, the calm **Minimal** layout (direction B on the design canvas), with
 | Style | Look |
 |---|---|
 | **Plain** | Geist type, hairlines, outlined note circles, one blue accent. |
-| **Blueprint** | Grid background, Bodoni serif letters and numbers with condensed labels, cobalt selection boxes with corner handles, `↵/` tags, the hit line drawn as a measured axis. Notes are outlined circles, never hexagons. |
+| **Blueprint** | Grid background, Bodoni serif letters and numbers with condensed labels, cobalt selection boxes with corner handles, `↵/` tags, the hit line drawn as a measured axis. Notes look like the other styles (outlined circles, solid next note): never hexagons, and no selection box on the next note. |
 | **Retro** | Lone Trail palette (#5C7F71, #802520, #BA8530, #181818, #F5EDDC, #B2653B), cream paper or black with scanlines, Jost + Oswald, four-colour stripe, orange label chips, record-groove note discs, halftone combo dots, dot-matrix timecode. |
 
 - The layout and components are shared; a style is a set of design tokens (colours, fonts, textures) plus a few style-specific decorations.
