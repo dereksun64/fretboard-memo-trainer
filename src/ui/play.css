@@ -508,3 +508,21 @@
 .judgment-slot.wide {
   width: 300px;
 }
+
+/* ---- Miss prompt ---- */
+.miss-prompt {
+  border-color: var(--wrong);
+}
+:root[data-style='blueprint'] .miss-prompt {
+  outline-color: var(--wrong);
+}
+.overlay-foot {
+  flex-basis: 100%;
+  margin-top: -6px;
+  font-size: 13px;
+  text-decoration: none;
+}
+.overlay-foot:hover {
+  color: var(--ink);
+  text-decoration: underline;
+}
