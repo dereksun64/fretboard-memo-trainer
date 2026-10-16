@@ -1,6 +1,7 @@
 // Rhythm mode: a count-in, then one run with the metronome. The mic's note
-// events are judged against the beats every frame; when the last beat is
-// judged the run is recorded (if it counts) and the results show.
+// events are judged against the beats every frame and the run always plays
+// to the end. A clean run is recorded and the results show; with mistakes,
+// the player can try again or count it anyway (the mic can mishear).
 
 import { useEffect, useRef, useState } from 'react'
 import { getAudioEngine } from '../app/audio'
@@ -21,7 +22,6 @@ import { Highway } from './Highway'
 import './play.css'
 
 const COUNT_IN = 4
-const RESUME_COUNT_IN = 2 // clicks before play picks up again after Continue
 const LEAD = 0.4 // seconds between pressing start and the first click
 
 interface Props {
@@ -62,10 +62,15 @@ export function Play({ exercise, progress, windowStart, onRunFinished }: Props) 
     return engine.onNote((ev) => run.played.push({ time: engine.corrected(ev), midi: ev.midi }))
   }, [engine, run])
 
+  // R restarts whatever run is on screen; kept in a ref so the key handler stays put.
+  const restartRef = useRef<(() => void) | null>(null)
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement) return
+      if (e.metaKey || e.ctrlKey || e.altKey) return // leave Cmd+R (reload) and friends alone
       if (e.key === 'd' || e.key === 'D') setDiagram((d) => !d)
+      if ((e.key === 'r' || e.key === 'R') && !e.repeat) restartRef.current?.()
       if (e.key === 'Escape') navigate('/')
     }
     addEventListener('keydown', onKey)
@@ -106,6 +111,8 @@ export function Play({ exercise, progress, windowStart, onRunFinished }: Props) 
     }
   }
   const start = () => beginRun()
+  const restart = () => run && beginRun({ item: run.item, counts: run.counts })
+  restartRef.current = run && engine ? restart : null
 
   const header = (
     <div className="play-head">
@@ -143,12 +150,12 @@ export function Play({ exercise, progress, windowStart, onRunFinished }: Props) 
           <p className="muted">{info.desc}</p>
           <p>
             {done < total
-              ? `${done} of ${total} runs cleared at ${progress.level} BPM. Each run is ${REPS} repetitions; a miss or wrong note fails it.`
+              ? `${done} of ${total} runs cleared at ${progress.level} BPM. Each run is ${REPS} repetitions, played through to the end.`
               : `All runs cleared at ${progress.level} BPM. Replays don't count toward your level.`}
           </p>
           <p className="muted" style={{ fontSize: 14 }}>
             Uses your microphone. Headphones help keep the metronome out of the mic. Press D to toggle the
-            fretboard diagram, Esc to leave.
+            fretboard diagram, R to restart a run, Esc to leave.
           </p>
           <div>
             <button type="button" className="btn primary" onClick={start}>
@@ -178,10 +185,15 @@ export function Play({ exercise, progress, windowStart, onRunFinished }: Props) 
         onToggleDiagram={() => setDiagram((d) => !d)}
         onFinished={(s) => {
           engine.metronome.stop()
-          if (run.counts) onRunFinished(s.cleared)
+          // A failed run isn't recorded: the player either tries it again or
+          // overrides the result with "I think I got it".
+          if (run.counts && s.cleared) onRunFinished(true)
+        }}
+        onPass={() => {
+          if (run.counts) onRunFinished(true)
         }}
         onNext={start}
-        onRestart={() => beginRun({ item: run.item, counts: run.counts })}
+        onRestart={restart}
         progressNote={
           run.counts
             ? `${clearedCount(progress, exercise)} of ${poolSize(progress, exercise)} runs cleared at ${run.bpm} BPM.`
@@ -199,87 +211,56 @@ interface RunViewProps {
   windowStart: number
   onToggleDiagram: () => void
   onFinished: (s: RunSummary) => void
+  /** "I think I got it": count a run the mic judged as failed. */
+  onPass: () => void
   onNext: () => void
   /** Play the same run again from the top (the abandoned attempt isn't recorded). */
   onRestart: () => void
   progressNote: string
 }
 
-function RunView({ run, engine, diagram, windowStart, onToggleDiagram, onFinished, onNext, onRestart, progressNote }: RunViewProps) {
+function RunView({ run, engine, diagram, windowStart, onToggleDiagram, onFinished, onPass, onNext, onRestart, progressNote }: RunViewProps) {
   const finishedRef = useRef(false)
   const [summary, setSummary] = useState<RunSummary | null>(null)
-  // Beat times can move: Continue after a miss shifts the remaining beats.
-  const [beats, setBeats] = useState(run.beats)
-  // While the miss popup is up, the run is frozen at this moment.
-  const [paused, setPaused] = useState<{ at: number; missed: number } | null>(null)
-  const missPrompted = useRef(false)
-  // The count-in currently shown: the run's opening one, or a short one after Continue.
-  const [countInTo, setCountInTo] = useState({ time: run.firstBeat, clicks: COUNT_IN })
+  // Set when the player overrides a failed result with "I think I got it".
+  const [passed, setPassed] = useState(false)
+  const soundPlayed = useRef(false)
   // Draw on the clock you're hearing (not the one the audio thread is
   // rendering ahead), and keep animating after the run ends so the last notes
   // slide past and fade.
-  const clock = useFrameValue(() => engine.displayTime())
-  const now = paused ? paused.at : clock
+  const now = useFrameValue(() => engine.displayTime())
 
-  // While paused, ignore anything played after the pause: those beats get
-  // moved later on Continue and must be played again then.
-  const played = paused ? run.played.filter((n) => n.time <= paused.at) : run.played
-  const results = judgeBeats(beats, played, run.bpm, now)
+  const { beats } = run
+  const results = judgeBeats(beats, run.played, run.bpm, now)
   const live = summarize(results)
+  // Results wait until the last note has slid past the hit line and faded.
+  const lastBeat = beats[beats.length - 1].time
+  const showResults = summary !== null && now > lastBeat + run.spb + 0.15
 
   useEffect(() => {
     if (live.finished && !finishedRef.current) {
       finishedRef.current = true
       setSummary(live)
       onFinished(live)
-      return
     }
-    // First miss mid-run: stop, play a soft error sound and ask what to do.
-    const missed = results.findIndex((r) => r.judgment === 'miss')
-    if (missed !== -1 && !missPrompted.current && !live.finished) {
-      missPrompted.current = true
-      engine.metronome.stop()
+    // A soft error sound as the "made a few mistakes" popup appears.
+    if (showResults && summary && !summary.cleared && !soundPlayed.current) {
+      soundPlayed.current = true
       playMissSound(engine.ctx)
-      setPaused({ at: now, missed })
     }
   })
-
-  /** Pick up from the next note after a short count-in; the run stays failed. */
-  const resume = () => {
-    const from = results.findIndex((r) => r.judgment === 'pending')
-    setPaused(null)
-    if (from === -1) return
-    const t0 = engine.ctx.currentTime + LEAD
-    const nextTime = t0 + RESUME_COUNT_IN * run.spb
-    const shift = nextTime - beats[from].time
-    setBeats(beats.map((b, i) => (i >= from ? { ...b, time: b.time + shift } : b)))
-    setCountInTo({ time: nextTime, clicks: RESUME_COUNT_IN })
-    engine.metronome.start(run.bpm, {
-      startTime: t0,
-      beats: RESUME_COUNT_IN + (beats.length - from),
-      // first count-in click, then the start of each 6-string pass as before
-      accent: (i) => i === 0 || (i >= RESUME_COUNT_IN && (from + i - RESUME_COUNT_IN) % 6 === 0),
-    })
-    if (import.meta.env.DEV) {
-      Object.assign(window, { __fmtResume: { from, nextTime, spb: run.spb, now: () => engine.ctx.currentTime } })
-    }
-  }
 
   const next = results.findIndex((r) => r.judgment === 'pending')
   const lastIdx = next === -1 ? results.length - 1 : next - 1
   const last = lastIdx >= 0 && results[lastIdx].judgment !== 'pending' ? results[lastIdx] : null
   const countIn =
-    !paused && now < countInTo.time - run.spb / 2
-      ? Math.min(countInTo.clicks, Math.ceil((countInTo.time - now) / run.spb))
-      : 0
+    now < run.firstBeat - run.spb / 2 ? Math.min(COUNT_IN, Math.ceil((run.firstBeat - now) / run.spb)) : 0
   const target = run.steps[next === -1 ? run.steps.length - 1 : next]
   const perRep = run.steps.length / REPS
   const beatNo = next === -1 ? run.steps.length : next + 1
   const rep = Math.min(REPS, Math.floor((beatNo - 1) / perRep) + 1)
   const heard = engine.livePitch.midi
-  // Results wait until the last note has slid past the hit line and faded.
-  const lastBeat = beats[beats.length - 1].time
-  const showResults = summary !== null && now > lastBeat + run.spb + 0.15
+  const mistakes = summary ? summary.miss + summary.wrong : 0
 
   return (
     <>
@@ -331,23 +312,31 @@ function RunView({ run, engine, diagram, windowStart, onToggleDiagram, onFinishe
 
       <div className="stage">
         <Highway steps={run.steps} beats={beats} results={results} now={now} spb={run.spb} next={next} />
-        {paused && (
+        {showResults && summary && !summary.cleared && !passed && (
           <section className="results overlay miss-prompt" role="alertdialog" aria-labelledby="miss-title" aria-describedby="miss-desc">
             <div className="results-main">
               <span id="miss-title" className="results-title display failed">
-                Missed a note
+                {mistakes === 1 ? 'A mistake?' : 'A few mistakes?'}
               </span>
               <span id="miss-desc" className="muted">
-                {run.steps[paused.missed].note} on the {stringLabel(run.steps[paused.missed].string)} string didn't come in on
-                the beat, so this run won't clear.
+                We think you made {mistakes === 1 ? 'a mistake' : 'a few mistakes'} ({mistakeList(summary)}). Try again? If the
+                mic misheard you, count it.
               </span>
             </div>
+            <Stats summary={summary} />
             <div className="results-actions">
               <button type="button" className="btn primary" onClick={onRestart} autoFocus>
-                Restart run
+                Try again
               </button>
-              <button type="button" className="btn" onClick={resume}>
-                Continue
+              <button
+                type="button"
+                className="btn"
+                onClick={() => {
+                  setPassed(true)
+                  onPass()
+                }}
+              >
+                I think I got it
               </button>
             </div>
             <a className="overlay-foot muted" href="#/lab">
@@ -355,36 +344,13 @@ function RunView({ run, engine, diagram, windowStart, onToggleDiagram, onFinishe
             </a>
           </section>
         )}
-        {showResults && summary && (
+        {showResults && summary && (summary.cleared || passed) && (
           <section className="results overlay" aria-live="assertive">
             <div className="results-main">
-              <span className={`results-title display ${summary.cleared ? 'cleared' : 'failed'}`}>
-                {summary.cleared ? 'Cleared' : 'Failed'}
-              </span>
-              <span className="muted">{progressNote}</span>
+              <span className="results-title display cleared">Cleared</span>
+              <span className="muted">{passed ? `Counted as cleared. ${progressNote}` : progressNote}</span>
             </div>
-            <dl className="results-stats">
-              <div>
-                <dt className="label muted">Accuracy</dt>
-                <dd className="mono">{summary.accuracy}%</dd>
-              </div>
-              <div>
-                <dt className="label muted">Max combo</dt>
-                <dd className="mono">{summary.maxCombo}</dd>
-              </div>
-              <div>
-                <dt className="label muted">Perfect / Good</dt>
-                <dd className="mono">
-                  {summary.perfect} / {summary.good}
-                </dd>
-              </div>
-              <div>
-                <dt className="label muted">Miss / Wrong</dt>
-                <dd className="mono">
-                  {summary.miss} / {summary.wrong}
-                </dd>
-              </div>
-            </dl>
+            <Stats summary={summary} />
             <div className="results-actions">
               <button type="button" className="btn primary" onClick={onNext} autoFocus>
                 Next run
@@ -418,6 +384,9 @@ function RunView({ run, engine, diagram, windowStart, onToggleDiagram, onFinishe
               'Listening'
             )}
           </span>
+          <button type="button" className="btn" onClick={onRestart}>
+            Restart <span className="label muted">R</span>
+          </button>
           <button type="button" className="btn" aria-pressed={diagram} onClick={onToggleDiagram}>
             Diagram <span className="label muted">D</span>
           </button>
@@ -429,5 +398,39 @@ function RunView({ run, engine, diagram, windowStart, onToggleDiagram, onFinishe
 
       {diagram && <FretDiagram windowStart={windowStart} />}
     </>
+  )
+}
+
+function mistakeList(s: RunSummary): string {
+  const parts = []
+  if (s.miss) parts.push(`${s.miss} missed`)
+  if (s.wrong) parts.push(`${s.wrong} wrong`)
+  return parts.join(', ')
+}
+
+function Stats({ summary }: { summary: RunSummary }) {
+  return (
+    <dl className="results-stats">
+      <div>
+        <dt className="label muted">Accuracy</dt>
+        <dd className="mono">{summary.accuracy}%</dd>
+      </div>
+      <div>
+        <dt className="label muted">Max combo</dt>
+        <dd className="mono">{summary.maxCombo}</dd>
+      </div>
+      <div>
+        <dt className="label muted">Perfect / Good</dt>
+        <dd className="mono">
+          {summary.perfect} / {summary.good}
+        </dd>
+      </div>
+      <div>
+        <dt className="label muted">Miss / Wrong</dt>
+        <dd className="mono">
+          {summary.miss} / {summary.wrong}
+        </dd>
+      </div>
+    </dl>
   )
 }
