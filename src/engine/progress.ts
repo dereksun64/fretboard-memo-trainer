@@ -58,7 +58,7 @@ export function nextBasicsNote(p: Progress): Natural | null {
   return basicsDone(p) ? null : p.basics.queue[p.basics.cleared]
 }
 
-/** Basics runs only end when cleared (a wrong note restarts the run). */
+/** Basics runs only end when cleared (wait mode waits through wrong notes). */
 export function recordBasicsClear(p: Progress): Progress {
   if (basicsDone(p)) return p
   return { ...p, basics: { ...p.basics, cleared: p.basics.cleared + 1 } }
