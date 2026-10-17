@@ -50,7 +50,7 @@ Basics ─▶ Exercise 1 ─▶ Exercise 2 ─▶ Exercise 3 ─▶ Exercise 4 �
 - **Wait mode**: no metronome. The app advances only when you play the correct target note.
 - The fretboard diagram starts visible; **Diagram** (D) hides it. **Restart** (R) plays the same note again from the top. A footer shows hits and wrong notes, like the exercises.
 - **One run** is a single natural note: 6→1→6, ×3 (36 notes).
-- A wrong note doesn't restart or fail the run. The app shows what it heard ("Wrong · heard G#3, try again") and keeps waiting for the correct note. The results mention how many wrong notes there were.
+- A wrong note doesn't restart or fail the run. The app shows what it heard ("Wrong · heard G#3, try again") and keeps waiting for the correct note. The results mention how many wrong notes there were. Wrong notes before the first correct note are ignored (not shown, not counted).
 - **Pick a note**: clicking the big letter opens a picker of the 7 naturals, each showing how many of its runs are left (no letter shortcuts; click a note to pick it, Esc or a click outside closes it). A pick with runs left moves that note to the front of the queue, so the run counts and the queue still holds each note once. A note with none left (or any pick once Basics is done) plays as a replay that doesn't count.
 - **Random note** (Tab, or the footer button) jumps to a random different note, preferring notes whose run still counts. Shift+Tab still moves focus.
 - **Skip Basics** (on the Basics start screen, and *Skip* on its Home row) marks Basics done and unlocks Exercise 1.
@@ -104,7 +104,7 @@ For each beat, the app compares the detected note onset (after the latency offse
 - **Perfect** = within 40% of the hit window, e.g. ±80 ms at 40 BPM.
 - **Good** = inside the hit window but not Perfect.
 - **Miss** = no correct note onset within the window.
-- **Wrong** = an onset inside the window with the wrong pitch.
+- **Wrong** = an onset inside the window with the wrong pitch. A wrong note before the first beat (in the count-in, even inside beat 1's window) is ignored, so it can't spoil beat 1.
 - **Cleared** = zero Wrong and zero Miss. Perfect and Good both count as clean.
 - **Accuracy** = (Perfect + 0.9 × Good) ÷ judged beats. **Combo** counts consecutive Perfect/Good and resets on Miss or Wrong.
 - **Runs always play to the end.** Misses and wrong notes never stop or pause the run; detection errors are too common for that.

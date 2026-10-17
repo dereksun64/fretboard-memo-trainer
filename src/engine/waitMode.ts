@@ -1,7 +1,8 @@
 // Basics plays in wait mode: no metronome, the run only advances when the
 // expected note is played. A wrong note is counted but changes nothing else:
 // the app keeps waiting for the right one (the mic can mishear, so wrong
-// notes never cost progress).
+// notes never cost progress). Wrong notes before the first correct one are
+// ignored entirely.
 
 export interface WaitState {
   /** Index of the next expected note. */
@@ -11,7 +12,7 @@ export interface WaitState {
   done: boolean
 }
 
-export type WaitOutcome = 'hit' | 'wrong' | 'done'
+export type WaitOutcome = 'hit' | 'wrong' | 'ignored' | 'done'
 
 export function startWait(): WaitState {
   return { pos: 0, wrong: 0, done: false }
@@ -25,6 +26,7 @@ export function feedWait(
 ): { state: WaitState; outcome: WaitOutcome } {
   if (state.done) return { state, outcome: 'done' }
   if (playedMidi !== expected[state.pos]) {
+    if (state.pos === 0) return { state, outcome: 'ignored' }
     return { state: { ...state, wrong: state.wrong + 1 }, outcome: 'wrong' }
   }
   const pos = state.pos + 1

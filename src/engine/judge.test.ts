@@ -42,6 +42,18 @@ describe('judgeBeats', () => {
     expect(judgeBeats(beats, [], 40, 1.5)[0].judgment).toBe('miss')
   })
 
+  it('ignores a wrong note just before the first beat', () => {
+    // wrong note in the count-in, inside beat 1's window, then the right one on time
+    let r = judgeBeats(beats.slice(0, 1), [{ time: 0.9, midi: 50 }, { time: 1.02, midi: 45 }], 40, 10)
+    expect(r[0].judgment).toBe('perfect')
+    // with nothing else played, beat 1 is a miss rather than wrong
+    r = judgeBeats(beats.slice(0, 1), [{ time: 0.9, midi: 50 }], 40, 10)
+    expect(r[0].judgment).toBe('miss')
+    // a wrong note after the first beat still counts
+    r = judgeBeats(beats.slice(0, 1), [{ time: 1.1, midi: 50 }], 40, 10)
+    expect(r[0].judgment).toBe('wrong')
+  })
+
   it('uses each note for one beat only', () => {
     const close = [
       { time: 1, expectedMidi: 45 },
