@@ -1,6 +1,6 @@
 // Basics (Thomas's Exercise 1): wait mode. No metronome; each correct note
-// slides the next one onto the hit line, a wrong one scrolls the run back to
-// the start. The diagram stays visible.
+// slides the next one onto the hit line; a wrong one is flagged and the app
+// keeps waiting for the right note. The diagram stays visible.
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { getAudioEngine } from '../app/audio'
@@ -119,7 +119,7 @@ export function Basics({ progress, windowStart, onRunCleared }: Props) {
           <h1 className="display">Basics</h1>
           <p className="muted">
             Find one note on every string, 6 → 1 and back, three times. Take your time: the app waits for each
-            note. A wrong note restarts the run. Look at the diagram as much as you like.
+            note, and a wrong note just shows what it heard. Look at the diagram as much as you like.
           </p>
           <p>
             {basicsDone(progress)
@@ -163,7 +163,7 @@ export function Basics({ progress, windowStart, onRunCleared }: Props) {
               <>
                 <Tag>Wrong</Tag>
                 <span className="muted">
-                  heard <span className="mono">{wrong}</span>, starting over
+                  heard <span className="mono">{wrong}</span>, try again
                 </span>
               </>
             )}
@@ -182,7 +182,7 @@ export function Basics({ progress, windowStart, onRunCleared }: Props) {
             <span className="results-title display cleared">Run cleared</span>
             <span className="muted">
               {run.counts ? `${cleared} of ${total} Basics runs done.` : 'Replay: doesn’t count.'}
-              {wait.restarts > 0 && ` Restarted ${wait.restarts} time${wait.restarts === 1 ? '' : 's'}.`}
+              {wait.wrong > 0 && ` ${wait.wrong} wrong note${wait.wrong === 1 ? '' : 's'} along the way.`}
             </span>
           </div>
           <div className="results-actions">
@@ -210,8 +210,7 @@ export function Basics({ progress, windowStart, onRunCleared }: Props) {
 
 /**
  * The highway in wait mode: positions instead of seconds. The "clock" eases
- * toward the next note's index, so each correct note slides the run along
- * and a restart scrolls back to the start.
+ * toward the next note's index, so each correct note slides the run along.
  */
 function BasicsHighway({ steps, wait, flashes }: { steps: Step[]; wait: WaitState; flashes: Flash[] }) {
   const pos = useRef(0)

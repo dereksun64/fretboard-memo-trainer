@@ -15,13 +15,13 @@ describe('wait mode', () => {
     expect(r.state.done).toBe(true)
   })
 
-  it('restarts the run on a wrong note, octave included', () => {
+  it('counts a wrong note (octave included) and keeps waiting for the right one', () => {
     let s = feedWait(startWait(), expected, 45).state
     const r = feedWait(s, expected, 45) // right letter, wrong octave
     expect(r.outcome).toBe('wrong')
-    expect(r.state.pos).toBe(0)
-    expect(r.state.restarts).toBe(1)
+    expect(r.state.pos).toBe(1)
+    expect(r.state.wrong).toBe(1)
     s = r.state
-    expect(feedWait(s, expected, 45).outcome).toBe('hit')
+    expect(feedWait(s, expected, 57).outcome).toBe('hit')
   })
 })

@@ -50,7 +50,7 @@ Basics ─▶ Exercise 1 ─▶ Exercise 2 ─▶ Exercise 3 ─▶ Exercise 4 �
 - **Wait mode**: no metronome. The app advances only when you play the correct target note.
 - The fretboard diagram is always visible.
 - **One run** is a single natural note: 6→1→6, ×3 (36 notes).
-- A run must have zero wrong notes. A wrong note restarts that run.
+- A wrong note doesn't restart or fail the run. The app shows what it heard ("Wrong · heard G#3, try again") and keeps waiting for the correct note. The results mention how many wrong notes there were.
 - **Completion** takes two full rounds of all 7 naturals, 14 runs in all. Each round draws the notes in a new shuffled order.
 - Finishing it unlocks Exercise 1.
 
