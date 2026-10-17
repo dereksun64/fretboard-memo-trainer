@@ -15,6 +15,7 @@ import { drawPool, type ExerciseId, type PoolItem } from '../engine/pools'
 import { clearedCount, isUnlocked, nextItem, poolSize, type Progress } from '../engine/progress'
 import { REPS, runSteps, type Step } from '../engine/sequence'
 import { midiToName, stringLabel } from '../music/notes'
+import { StartStop } from './controls'
 import { SelectionBox, Stripe, Tag } from './decor'
 import { EXERCISE_INFO, exerciseCode } from './exercises'
 import { FretDiagram } from './FretDiagram'
@@ -36,6 +37,8 @@ interface Run {
   item: PoolItem
   /** False for replays of an already-cleared exercise. */
   counts: boolean
+  /** False while the run sits ready, waiting for Start. */
+  started: boolean
   steps: Step[]
   beats: BeatTarget[]
   bpm: number
@@ -46,73 +49,117 @@ interface Run {
 
 let runIds = 0
 
+/**
+ * A run laid out but not started. Its clock stands at -LEAD, so the notes sit
+ * where they will be the moment Start is pressed and nothing jumps.
+ */
+function readyRun(item: PoolItem, counts: boolean, bpm: number, windowStart: number): Run {
+  const steps = runSteps(item)
+  const spb = 60 / bpm
+  const firstBeat = COUNT_IN * spb
+  return {
+    id: ++runIds,
+    item,
+    counts,
+    started: false,
+    steps,
+    beats: beatTargets(steps, firstBeat, bpm, windowStart),
+    bpm,
+    spb,
+    firstBeat,
+    played: [],
+  }
+}
+
 export function Play({ exercise, progress, windowStart, onRunFinished }: Props) {
   const info = EXERCISE_INFO[exercise]
   const [engine, setEngine] = useState<AudioEngine | null>(null)
-  const [run, setRun] = useState<Run | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [diagram, setDiagram] = useState(true)
+
+  /** The next run from the pool (or a replay once the pool is cleared), ready to start. */
+  const nextRun = (): Run => {
+    const queued = nextItem(progress, exercise)
+    return readyRun(queued ?? drawPool(exercise, Math.random)[0], queued !== null, progress.level, windowStart)
+  }
+  const [run, setRun] = useState<Run>(nextRun)
+  // Set once the run on screen has been recorded as cleared, so stopping or
+  // restarting it can't record the same run twice.
+  const [recorded, setRecorded] = useState(false)
 
   // Stop the metronome if we leave mid-run.
   useEffect(() => () => engine?.metronome.stop(), [engine])
 
-  // Collect note events for the current run.
+  // Collect note events while a run is playing.
   useEffect(() => {
-    if (!engine || !run) return
+    if (!engine || !run.started) return
     return engine.onNote((ev) => run.played.push({ time: engine.corrected(ev), midi: ev.midi }))
   }, [engine, run])
 
-  // R restarts whatever run is on screen; kept in a ref so the key handler stays put.
-  const restartRef = useRef<(() => void) | null>(null)
+  /** Start `r` now: count-in, then the run. Needs a user gesture (click or key). */
+  const begin = async (r: Run) => {
+    setError(null)
+    try {
+      const e = engine ?? (await getAudioEngine())
+      setEngine(e)
+      const t0 = e.ctx.currentTime + LEAD
+      const firstBeat = t0 + COUNT_IN * r.spb
+      e.metronome.start(r.bpm, { startTime: t0, beats: COUNT_IN + r.steps.length, accent: runAccents(COUNT_IN) })
+      if (import.meta.env.DEV) {
+        // Lets browser tests line simulated plucks up with the beats.
+        Object.assign(window, { __fmtRun: { firstBeat, spb: r.spb, steps: r.steps, now: () => e.ctx.currentTime } })
+      }
+      setRecorded(false)
+      setRun({ ...r, id: ++runIds, started: true, firstBeat, beats: beatTargets(r.steps, firstBeat, r.bpm, windowStart), played: [] })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err))
+    }
+  }
+
+  /** The same run again, from the top. A run already recorded comes back as a replay. */
+  const sameRun = () => readyRun(run.item, run.counts && !recorded, run.bpm, windowStart)
+  const show = (r: Run) => {
+    engine?.metronome.stop()
+    setRecorded(false)
+    setRun(r)
+  }
+
+  /** Space / the Start-Stop button. Stopping keeps you here with the run ready again. */
+  const toggle = () => {
+    if (!run.started) return void begin(run)
+    show(recorded ? nextRun() : sameRun())
+  }
+  const restart = () => begin(sameRun())
+
+  // Shortcuts call the latest handlers through refs so the listener stays put.
+  const keys = useRef({ toggle, restart })
+  keys.current = { toggle, restart }
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement) return
       if (e.metaKey || e.ctrlKey || e.altKey) return // leave Cmd+R (reload) and friends alone
+      if (e.code === 'Space') {
+        // Not a click on whatever button has focus, and not a page scroll.
+        e.preventDefault()
+        if (!e.repeat) keys.current.toggle()
+        return
+      }
       if (e.key === 'd' || e.key === 'D') setDiagram((d) => !d)
-      if ((e.key === 'r' || e.key === 'R') && !e.repeat) restartRef.current?.()
+      if ((e.key === 'r' || e.key === 'R') && !e.repeat) keys.current.restart()
       if (e.key === 'Escape') navigate('/')
     }
-    addEventListener('keydown', onKey)
-    return () => removeEventListener('keydown', onKey)
-  }, [])
-
-  /** Start a run: the next one from the pool, or `retry` to play the same run again. */
-  const beginRun = async (retry?: { item: PoolItem; counts: boolean }) => {
-    setError(null)
-    try {
-      const e = engine ?? (await getAudioEngine())
-      setEngine(e)
-      const queued = retry ? (retry.counts ? retry.item : null) : nextItem(progress, exercise)
-      const item = retry?.item ?? queued ?? drawPool(exercise, Math.random)[0]
-      const steps = runSteps(item)
-      const bpm = progress.level
-      const spb = 60 / bpm
-      const t0 = e.ctx.currentTime + LEAD
-      const firstBeat = t0 + COUNT_IN * spb
-      e.metronome.start(bpm, { startTime: t0, beats: COUNT_IN + steps.length, accent: runAccents(COUNT_IN) })
-      if (import.meta.env.DEV) {
-        // Lets browser tests line simulated plucks up with the beats.
-        Object.assign(window, { __fmtRun: { firstBeat, spb, steps, now: () => e.ctx.currentTime } })
-      }
-      setRun({
-        id: ++runIds,
-        item,
-        counts: queued !== null,
-        steps,
-        beats: beatTargets(steps, firstBeat, bpm, windowStart),
-        bpm,
-        spb,
-        firstBeat,
-        played: [],
-      })
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
+    // A focused button would also act on Space's keyup.
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (e.code === 'Space' && !(e.target instanceof HTMLInputElement)) e.preventDefault()
     }
-  }
-  const start = () => beginRun()
-  const restart = () => run && beginRun({ item: run.item, counts: run.counts })
-  restartRef.current = run && engine ? restart : null
+    addEventListener('keydown', onKey)
+    addEventListener('keyup', onKeyUp)
+    return () => {
+      removeEventListener('keydown', onKey)
+      removeEventListener('keyup', onKeyUp)
+    }
+  }, [])
 
   const header = (
     <div className="play-head">
@@ -122,6 +169,7 @@ export function Play({ exercise, progress, windowStart, onRunFinished }: Props) 
         </svg>
         <span className="label">Exercise {exerciseCode(exercise)}</span>
         <span className="back-name">{info.name}</span>
+        <span className="label muted">Esc</span>
       </a>
       <span className="label muted">{progress.level} BPM</span>
     </div>
@@ -139,43 +187,14 @@ export function Play({ exercise, progress, windowStart, onRunFinished }: Props) 
     )
   }
 
-  if (!run || !engine) {
-    const done = clearedCount(progress, exercise)
-    const total = poolSize(progress, exercise)
-    return (
-      <main className="page play">
-        {header}
-        <section className="ready">
-          <h1 className="display">{info.name}</h1>
-          <p className="muted">{info.desc}</p>
-          <p>
-            {done < total
-              ? `${done} of ${total} runs cleared at ${progress.level} BPM. Each run is ${REPS} repetitions, played through to the end.`
-              : `All runs cleared at ${progress.level} BPM. Replays don't count toward your level.`}
-          </p>
-          <p className="muted" style={{ fontSize: 14 }}>
-            Uses your microphone. Headphones help keep the metronome out of the mic. Press D to toggle the
-            fretboard diagram, R to restart a run, Esc to leave.
-          </p>
-          <div>
-            <button type="button" className="btn primary" onClick={start}>
-              Start
-            </button>
-          </div>
-          {error && (
-            <p role="alert" style={{ color: 'var(--wrong)' }}>
-              {error}
-            </p>
-          )}
-        </section>
-        {diagram && <FretDiagram windowStart={windowStart} />}
-      </main>
-    )
-  }
-
   return (
     <main className="page play">
       {header}
+      {error && (
+        <p role="alert" style={{ color: 'var(--wrong)', margin: 0 }}>
+          {error}
+        </p>
+      )}
       <RunView
         key={run.id}
         run={run}
@@ -183,16 +202,20 @@ export function Play({ exercise, progress, windowStart, onRunFinished }: Props) 
         diagram={diagram}
         windowStart={windowStart}
         onToggleDiagram={() => setDiagram((d) => !d)}
+        onToggle={toggle}
         onFinished={(s) => {
-          engine.metronome.stop()
+          engine?.metronome.stop()
           // A failed run isn't recorded: the player either tries it again or
           // overrides the result with "I think I got it".
+          if (s.cleared) setRecorded(true)
           if (run.counts && s.cleared) onRunFinished(true)
         }}
         onPass={() => {
+          setRecorded(true)
           if (run.counts) onRunFinished(true)
         }}
-        onNext={start}
+        onNext={() => show(nextRun())}
+        onTryAgain={() => show(sameRun())}
         onRestart={restart}
         progressNote={
           run.counts
@@ -206,20 +229,25 @@ export function Play({ exercise, progress, windowStart, onRunFinished }: Props) 
 
 interface RunViewProps {
   run: Run
-  engine: AudioEngine
+  /** Null until the first Start (the mic opens on that click). */
+  engine: AudioEngine | null
   diagram: boolean
   windowStart: number
   onToggleDiagram: () => void
+  /** Start, or stop and get the run ready again. */
+  onToggle: () => void
   onFinished: (s: RunSummary) => void
   /** "I think I got it": count a run the mic judged as failed. */
   onPass: () => void
   onNext: () => void
-  /** Play the same run again from the top (the abandoned attempt isn't recorded). */
+  /** Get the same run ready again (from the mistakes popup). */
+  onTryAgain: () => void
+  /** Play the same run again from the top, right away (the abandoned attempt isn't recorded). */
   onRestart: () => void
   progressNote: string
 }
 
-function RunView({ run, engine, diagram, windowStart, onToggleDiagram, onFinished, onPass, onNext, onRestart, progressNote }: RunViewProps) {
+function RunView({ run, engine, diagram, windowStart, onToggleDiagram, onToggle, onFinished, onPass, onNext, onTryAgain, onRestart, progressNote }: RunViewProps) {
   const finishedRef = useRef(false)
   const [summary, setSummary] = useState<RunSummary | null>(null)
   // Set when the player overrides a failed result with "I think I got it".
@@ -227,8 +255,9 @@ function RunView({ run, engine, diagram, windowStart, onToggleDiagram, onFinishe
   const soundPlayed = useRef(false)
   // Draw on the clock you're hearing (not the one the audio thread is
   // rendering ahead), and keep animating after the run ends so the last notes
-  // slide past and fade.
-  const now = useFrameValue(() => engine.displayTime())
+  // slide past and fade. A run that hasn't started stands still at -LEAD.
+  const clock = useFrameValue(() => (engine && run.started ? engine.displayTime() : -LEAD), run.started)
+  const now = run.started ? clock : -LEAD
 
   const { beats } = run
   const results = judgeBeats(beats, run.played, run.bpm, now)
@@ -246,7 +275,7 @@ function RunView({ run, engine, diagram, windowStart, onToggleDiagram, onFinishe
     // A soft error sound as the "made a few mistakes" popup appears.
     if (showResults && summary && !summary.cleared && !soundPlayed.current) {
       soundPlayed.current = true
-      playMissSound(engine.ctx)
+      if (engine) playMissSound(engine.ctx)
     }
   })
 
@@ -254,17 +283,18 @@ function RunView({ run, engine, diagram, windowStart, onToggleDiagram, onFinishe
   const lastIdx = next === -1 ? results.length - 1 : next - 1
   const last = lastIdx >= 0 && results[lastIdx].judgment !== 'pending' ? results[lastIdx] : null
   const countIn =
-    now < run.firstBeat - run.spb / 2 ? Math.min(COUNT_IN, Math.ceil((run.firstBeat - now) / run.spb)) : 0
+    run.started && now < run.firstBeat - run.spb / 2 ? Math.min(COUNT_IN, Math.ceil((run.firstBeat - now) / run.spb)) : 0
   const target = run.steps[next === -1 ? run.steps.length - 1 : next]
   const perRep = run.steps.length / REPS
   const beatNo = next === -1 ? run.steps.length : next + 1
   const rep = Math.min(REPS, Math.floor((beatNo - 1) / perRep) + 1)
-  const heard = engine.livePitch.midi
+  const heard = engine?.livePitch.midi ?? null
   const mistakes = summary ? summary.miss + summary.wrong : 0
 
   return (
     <>
       <div className="run-meta label muted">
+        <span className="run-note">{progressNote}</span>
         <span>
           Run <span className="ink mono">{rep}</span>/{REPS}
         </span>
@@ -291,7 +321,8 @@ function RunView({ run, engine, diagram, windowStart, onToggleDiagram, onFinishe
         </div>
         <div className="feedback" aria-live="polite">
           <span className="judgment-slot">
-            {last && (
+            {!run.started && <span className="muted">Press Space to start</span>}
+            {run.started && last && (
               <>
                 <Tag>{last.judgment}</Tag>
                 <span className="offset mono muted">
@@ -325,7 +356,7 @@ function RunView({ run, engine, diagram, windowStart, onToggleDiagram, onFinishe
             </div>
             <Stats summary={summary} />
             <div className="results-actions">
-              <button type="button" className="btn primary" onClick={onRestart} autoFocus>
+              <button type="button" className="btn primary" onClick={onTryAgain} autoFocus>
                 Try again
               </button>
               <button
@@ -380,8 +411,10 @@ function RunView({ run, engine, diagram, windowStart, onToggleDiagram, onFinishe
               <>
                 Hearing <span className="mono">{midiToName(Math.round(heard))}</span>
               </>
-            ) : (
+            ) : run.started ? (
               'Listening'
+            ) : (
+              'Ready'
             )}
           </span>
           <button type="button" className="btn" onClick={onRestart}>
@@ -390,9 +423,7 @@ function RunView({ run, engine, diagram, windowStart, onToggleDiagram, onFinishe
           <button type="button" className="btn" aria-pressed={diagram} onClick={onToggleDiagram}>
             Diagram <span className="label muted">D</span>
           </button>
-          <a className="btn ghost" href="#/">
-            Stop <span className="label muted">Esc</span>
-          </a>
+          <StartStop started={run.started} onToggle={onToggle} />
         </div>
       </section>
 
