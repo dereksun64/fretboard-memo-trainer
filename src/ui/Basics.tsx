@@ -54,7 +54,6 @@ export function Basics({ progress, windowStart, onRunCleared, onPickNote }: Prop
   const [picking, setPicking] = useState(false)
   const pickingRef = useRef(picking)
   pickingRef.current = picking
-  const startRef = useRef<(note?: Natural) => void>(() => {})
   const restartRef = useRef<(() => void) | null>(null)
   const [diagram, setDiagram] = useState(true)
 
@@ -67,10 +66,7 @@ export function Basics({ progress, windowStart, onRunCleared, onPickNote }: Prop
         return
       }
       if (e.target instanceof HTMLInputElement) return
-      // With the picker open, typing a letter picks that note (D included).
-      const letter = e.key.toUpperCase() as Natural
-      if (pickingRef.current && NATURALS.includes(letter)) return startRef.current(letter)
-      if (letter === 'D') setDiagram((d) => !d)
+      if (e.key === 'd' || e.key === 'D') setDiagram((d) => !d)
       if (e.key === 'r' || e.key === 'R') {
         if (!e.repeat) restartRef.current?.()
       }
@@ -128,7 +124,6 @@ export function Basics({ progress, windowStart, onRunCleared, onPickNote }: Prop
       setError(err instanceof Error ? err.message : String(err))
     }
   }
-  startRef.current = start
   /** Play the same note again from the top. */
   const restart = () => run && start(run.note)
   restartRef.current = run && engine ? restart : null
