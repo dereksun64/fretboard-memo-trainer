@@ -48,7 +48,7 @@ Basics ─▶ Exercise 1 ─▶ Exercise 2 ─▶ Exercise 3 ─▶ Exercise 4 �
 ### Basics (Thomas's Exercise 1)
 
 - **Wait mode**: no metronome. The app advances only when you play the correct target note.
-- The fretboard diagram is always visible.
+- The fretboard diagram starts visible; **Diagram** (D) hides it. **Restart** (R) plays the same note again from the top. A footer shows hits and wrong notes, like the exercises.
 - **One run** is a single natural note: 6→1→6, ×3 (36 notes).
 - A wrong note doesn't restart or fail the run. The app shows what it heard ("Wrong · heard G#3, try again") and keeps waiting for the correct note. The results mention how many wrong notes there were.
 - **Pick a note**: clicking the big letter opens a picker of the 7 naturals, each showing how many of its runs are left (C–B keys pick while it's open, Esc closes). A pick with runs left moves that note to the front of the queue, so the run counts and the queue still holds each note once. A note with none left (or any pick once Basics is done) plays as a replay that doesn't count.
