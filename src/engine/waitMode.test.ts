@@ -15,6 +15,13 @@ describe('wait mode', () => {
     expect(r.state.done).toBe(true)
   })
 
+  it('ignores wrong notes before the first correct one', () => {
+    const s = startWait()
+    const r = feedWait(s, expected, 50)
+    expect(r.outcome).toBe('ignored')
+    expect(r.state).toBe(s)
+  })
+
   it('counts a wrong note (octave included) and keeps waiting for the right one', () => {
     let s = feedWait(startWait(), expected, 45).state
     const r = feedWait(s, expected, 45) // right letter, wrong octave

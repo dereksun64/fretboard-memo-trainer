@@ -35,7 +35,8 @@ export function perfectWindowMs(bpm: number): number {
 }
 
 /**
- * Judge each beat. The first note inside a beat's window decides it.
+ * Judge each beat. The first note inside a beat's window decides it, except
+ * that a wrong note before the first beat (still in the count-in) is ignored.
  * A beat is 'pending' until `now` passes the end of its window plus
  * `settle` seconds, the time the analyzer needs to name a note.
  */
@@ -50,9 +51,12 @@ export function judgeBeats(
   const perfect = perfectWindowMs(bpm) / 1000
   const used = new Set<number>()
 
-  return beats.map((beat) => {
+  return beats.map((beat, b) => {
     const idx = notes.findIndex(
-      (n, i) => !used.has(i) && Math.abs(n.time - beat.time) <= win,
+      (n, i) =>
+        !used.has(i) &&
+        Math.abs(n.time - beat.time) <= win &&
+        !(b === 0 && n.time < beat.time && n.midi !== beat.expectedMidi),
     )
     if (idx === -1) {
       return { judgment: now > beat.time + win + settle ? 'miss' : 'pending' }
