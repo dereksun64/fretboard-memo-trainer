@@ -34,6 +34,17 @@ export function loadProgress(rng: Rng, storage: Storage | undefined = globalThis
   return newProgress(rng)
 }
 
+/** Remove everything this app keeps in localStorage (progress, settings, calibration). */
+export function clearLocalData(storage: Storage | undefined = globalThis.localStorage): void {
+  try {
+    if (!storage) return
+    const keys = Array.from({ length: storage.length }, (_, i) => storage.key(i)).filter((k): k is string => !!k?.startsWith('fmt.'))
+    for (const k of keys) storage.removeItem(k)
+  } catch {
+    // storage unavailable: nothing to clear
+  }
+}
+
 export function saveProgress(p: Progress, storage: Storage | undefined = globalThis.localStorage): void {
   try {
     storage?.setItem(KEY, JSON.stringify(p))

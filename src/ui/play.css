@@ -42,6 +42,11 @@
 .ready p {
   margin: 0;
 }
+.ready-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
 .ready .btn {
   margin-top: 12px;
   min-width: 140px;

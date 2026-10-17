@@ -24,6 +24,8 @@ interface Props {
   onRunCleared: () => void
   /** Move `note` to the front of the Basics queue so a run of it counts. */
   onPickNote: (note: Natural) => void
+  /** Mark Basics done without playing it. */
+  onSkip: () => void
 }
 
 interface Run {
@@ -34,7 +36,7 @@ interface Run {
   expected: number[]
 }
 
-export function Basics({ progress, windowStart, onRunCleared, onPickNote }: Props) {
+export function Basics({ progress, windowStart, onRunCleared, onPickNote, onSkip }: Props) {
   const [engine, setEngine] = useState<AudioEngine | null>(null)
   const [run, setRun] = useState<Run | null>(null)
   const [wait, setWait] = useState<WaitState>(startWait)
@@ -55,6 +57,7 @@ export function Basics({ progress, windowStart, onRunCleared, onPickNote }: Prop
   const pickingRef = useRef(picking)
   pickingRef.current = picking
   const restartRef = useRef<(() => void) | null>(null)
+  const randomRef = useRef<(() => void) | null>(null)
   const [diagram, setDiagram] = useState(true)
 
   useEffect(() => {
@@ -69,6 +72,11 @@ export function Basics({ progress, windowStart, onRunCleared, onPickNote }: Prop
       if (e.key === 'd' || e.key === 'D') setDiagram((d) => !d)
       if (e.key === 'r' || e.key === 'R') {
         if (!e.repeat) restartRef.current?.()
+      }
+      // Tab jumps to a random note (Shift+Tab still moves focus back).
+      if (e.key === 'Tab' && !e.shiftKey && randomRef.current) {
+        e.preventDefault()
+        if (!e.repeat) randomRef.current()
       }
     }
     addEventListener('keydown', onKey)
@@ -127,6 +135,14 @@ export function Basics({ progress, windowStart, onRunCleared, onPickNote }: Prop
   /** Play the same note again from the top. */
   const restart = () => run && start(run.note)
   restartRef.current = run && engine ? restart : null
+  /** A random different note, preferring ones whose run still counts. */
+  const random = () => {
+    const others = NATURALS.filter((n) => n !== run?.note)
+    const counting = basicsDone(progress) ? [] : others.filter((n) => basicsRunsLeft(progress, n) > 0)
+    const pool = counting.length ? counting : others
+    start(pool[Math.floor(Math.random() * pool.length)])
+  }
+  randomRef.current = run && engine ? random : null
 
   const total = progress.basics.queue.length
   const cleared = progress.basics.cleared
@@ -153,17 +169,29 @@ export function Basics({ progress, windowStart, onRunCleared, onPickNote }: Prop
           <p className="muted">
             Find one note on every string, 6 → 1 and back, three times. Take your time: the app waits for each
             note, and a wrong note just shows what it heard. Look at the diagram as much as you like. To play
-            a different note, click the big letter. Press D to toggle the diagram, R to restart a run, Esc to leave.
+            a different note, click the big letter. Press Tab for a random note, D to toggle the diagram, R to restart a run, Esc to leave.
           </p>
           <p>
             {basicsDone(progress)
               ? 'Basics is complete. Replays are for warming up and don’t count.'
               : `${cleared} of ${total} runs cleared. Finish all ${total} to unlock Exercise 1.`}
           </p>
-          <div>
+          <div className="ready-actions">
             <button type="button" className="btn primary" onClick={() => start()}>
               Start
             </button>
+            {!basicsDone(progress) && (
+              <button
+                type="button"
+                className="btn ghost"
+                onClick={() => {
+                  onSkip()
+                  navigate('/')
+                }}
+              >
+                Skip Basics
+              </button>
+            )}
           </div>
           {error && (
             <p role="alert" style={{ color: 'var(--wrong)' }}>
@@ -274,6 +302,9 @@ export function Basics({ progress, windowStart, onRunCleared, onPickNote }: Prop
           </span>
         </div>
         <div className="foot-actions">
+          <button type="button" className="btn" onClick={random}>
+            Random <span className="label muted">Tab</span>
+          </button>
           <button type="button" className="btn" onClick={restart}>
             Restart <span className="label muted">R</span>
           </button>

@@ -248,6 +248,37 @@
   gap: 12px;
 }
 
+.row-actions {
+  display: flex;
+  gap: 6px;
+}
+.row .btn.ghost {
+  min-width: 0;
+}
+
+.clear-data {
+  flex-basis: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+.link-btn {
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.link-btn:hover {
+  color: var(--ink);
+}
+.btn.danger {
+  border-color: var(--wrong);
+  color: var(--wrong);
+}
 .home-foot {
   display: flex;
   flex-wrap: wrap;
