@@ -645,3 +645,25 @@
   background: var(--accent);
   border-color: var(--accent);
 }
+
+/* ---- Start / Stop ---- */
+.start-stop {
+  min-width: 118px;
+  justify-content: space-between;
+}
+.start-stop.primary .label {
+  color: inherit;
+  opacity: 0.7;
+}
+.run-note {
+  margin-right: auto;
+}
+.head-side {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+}
+.head-side .link-btn {
+  text-transform: none;
+  letter-spacing: normal;
+}

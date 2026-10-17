@@ -81,7 +81,8 @@ src/
   ui/                   screens and shared visual pieces
     Home.tsx            level + bar, Increase BPM, exercise list, Skip Basics, Clear local data
     Basics.tsx          wait-mode run screen, note picker, BasicsHighway
-    Play.tsx            rhythm-mode run screen (count-in, judging, results, mistakes popup)
+    Play.tsx            rhythm-mode run screen (ready → count-in → judging → results / mistakes popup)
+    controls.tsx        run-screen controls shared by Basics and Play (StartStop)
     Highway.tsx         six-lane note highway (approach circles, fades, bursts)
     FretDiagram.tsx     fretboard chart for the current window
     decor.tsx           StyleContext, SelectionBox, Stripe, Tag (style-specific flourishes)
@@ -114,11 +115,11 @@ src/
   - `stop()` also cancels clicks that are already queued.
 
 **Rhythm run (`Play.tsx`).**
-1. `beginRun()` picks the pool item and builds `runSteps()` and `beatTargets()`. It starts the metronome with a 4-click count-in and creates a `Run`, keyed by id so `RunView` remounts.
+1. A `Run` is laid out *ready* (`started: false`, clock frozen at `-LEAD`) by `readyRun()`. Nothing plays until Start or Space calls `begin()`, which starts the metronome with a 4-click count-in and re-times the beats. Stop puts the same run back, ready. Each new `Run` gets a fresh id, so `RunView` remounts.
 2. Every frame, `RunView` re-judges all beats from scratch with `judgeBeats(beats, played, bpm, now)` and summarizes them. There's no incremental judge state, so judging stays a pure function of the inputs.
 3. When the run finishes, a clean run is recorded and shows **Cleared**. A run with mistakes shows the **Try again / I think I got it** popup and records nothing until you choose.
 
-**Wait-mode run (`Basics.tsx`).** Each note event goes through `feedWait()`. The highway's "clock" is the note index, eased toward the next position. The same footer controls are there: Random (Tab), Restart (R), Diagram (D) and Stop (Esc). The big letter opens the note picker.
+**Wait-mode run (`Basics.tsx`).** Each note event goes through `feedWait()`. The highway's "clock" is the note index, eased toward the next position. The same footer controls are there: Random (Tab), Restart (R), Diagram (D) and Start / Stop (Space). The big letter opens the note picker.
 
 **Highway.** `Highway` is presentational. It takes steps, beats, results, `now` and `spb`, and places notes by `(beat.time - now) / spb`. It draws:
 - approach circles (optional);
@@ -138,7 +139,7 @@ src/
 - **No layout shift.** Every changing piece of text (judgment, offset, combo, count-in, note) sits in a fixed-size slot. Popups float over the highway (`.results.overlay`) instead of pushing content.
 - **Every feature works in all 3 styles × 2 modes.** Check at least one non-Plain style and dark mode. Respect reduced motion.
 - **Keyboard shortcuts:** add one only when asked. The current set:
-  - Runs: R restart, D diagram, Esc leave.
+  - Runs: Space start/stop, R restart, D diagram, Esc leave (shown on the back link).
   - Basics also has Tab for a random note.
   - Every shortcut appears as a label on its button (e.g. `Restart R`).
   - Ignore keys held with Cmd, Ctrl or Alt, plus key repeats.
@@ -160,7 +161,7 @@ Run `npm test` (`vitest run`). Tests sit next to their code as `*.test.ts`.
 
 ### End-to-end in the browser pane
 
-There's no Playwright setup. End-to-end checks run in the Claude browser pane against the dev server: `preview_start {name: "dev"}`, port 5173. The pane blocks the real mic, so **swap in a fake mic before pressing Start**:
+There's no Playwright setup. End-to-end checks run in the Claude browser pane against the dev server: `preview_start {name: "dev"}`, port 5173. The pane blocks the real mic, so **swap in a fake mic before pressing Start** (the `.start-stop` button, or Space):
 
 ```js
 const fakeCtx = new AudioContext()
@@ -187,7 +188,7 @@ const OPEN = { 6: 40, 5: 45, 4: 50, 3: 55, 2: 59, 1: 64 }
 - **Assert on the DOM:** `.play-foot .counts`, `.run-meta`, `.judgment-slot`, `.results.overlay`, and the `fmt.progress` localStorage key. Take screenshots for visual changes.
 - **Seed state:** edit `localStorage['fmt.progress']` (for example `basics.cleared` or `level`; level 80 makes runs short), then reload. **Clear local data** on Home resets everything.
 - **Pane quirks:**
-  - Right after `location.reload()`, the next script can run before the page mounts. Retry if `.ready .btn` is null.
+  - Right after `location.reload()`, the next script can run before the page mounts. Retry if `.start-stop` is null.
   - The pane reports reduced motion, so monkeypatch `matchMedia` to check animations.
   - Hidden-pane timers are throttled.
 - **Tap R or D** with the `computer` key action.

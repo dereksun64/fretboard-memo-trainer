@@ -53,7 +53,8 @@ Basics ─▶ Exercise 1 ─▶ Exercise 2 ─▶ Exercise 3 ─▶ Exercise 4 �
 - A wrong note doesn't restart or fail the run. The app shows what it heard ("Wrong · heard G#3, try again") and keeps waiting for the correct note. The results mention how many wrong notes there were. Wrong notes before the first correct note are ignored (not shown, not counted).
 - **Pick a note**: clicking the big letter opens a picker of the 7 naturals, each showing how many of its runs are left (no letter shortcuts; click a note to pick it, Esc or a click outside closes it). A pick with runs left moves that note to the front of the queue, so the run counts and the queue still holds each note once. A note with none left (or any pick once Basics is done) plays as a replay that doesn't count.
 - **Random note** (Tab, or the footer button) jumps to a random different note, preferring notes whose run still counts. Shift+Tab still moves focus.
-- **Skip Basics** (on the Basics start screen, and *Skip* on its Home row) marks Basics done and unlocks Exercise 1.
+- **Start / Stop** (Space) works exactly as in the exercises: the note sits ready until Start, and Stop puts it back, ready. The mic is ignored while not started. Picking or randomizing a note keeps the current state (ready stays ready, playing keeps playing).
+- **Skip Basics** (in the Basics header, and *Skip* on its Home row) marks Basics done and unlocks Exercise 1.
 - **Completion** takes one run of each of the 7 naturals, 7 runs in all, in a shuffled order.
 - Finishing it unlocks Exercise 1.
 
@@ -108,7 +109,9 @@ For each beat, the app compares the detected note onset (after the latency offse
 - **Cleared** = zero Wrong and zero Miss. Perfect and Good both count as clean.
 - **Accuracy** = (Perfect + 0.9 × Good) ÷ judged beats. **Combo** counts consecutive Perfect/Good and resets on Miss or Wrong.
 - **Runs always play to the end.** Misses and wrong notes never stop or pause the run; detection errors are too common for that.
-- **Restart** (button beside Diagram, shortcut **R**) replays the same run from the top at any time; the abandoned attempt isn't recorded.
+- **Nothing starts on its own.** Opening an exercise, **Next run** and **Try again** all lay the run out on the highway, ready, with "Press Space to start".
+- **Start / Stop** (the last footer button, shortcut **Space**) starts the count-in. While a run plays the same button reads **Stop**: Space again stops the clicks and puts the same run back, ready, without leaving the exercise (after a cleared run, Stop readies the next one). **Esc** (shown on the back link) leaves.
+- **Restart** (button beside Diagram, shortcut **R**) replays the same run from the top right away; the abandoned attempt isn't recorded.
 - **With mistakes**, the end of the run plays a soft error sound and a popup says *We think you made a few mistakes (2 missed, 1 wrong). Try again?*, with the stats, a small *Calibrate in lab →* link and two buttons:
   - **Try again** (suggested, focused) replays the same run. Nothing is recorded.
   - **I think I got it** counts the run as cleared, for when the mic misheard.
@@ -188,7 +191,7 @@ One layout, the calm **Minimal** layout (direction B on the design canvas), with
 0. **Detection prototype**: mic → live note + octave + onset timing against a metronome. Confirms the built-in mic works before anything else.
 1. **UI mockups** *(done)*: chose B's layout with a Plain / Blueprint / Retro style setting.
 2. **Core engine** *(done)*: `src/engine/` — pools (`pools.ts`), run sequences (`sequence.ts`), judging and run summary (`judge.ts`), Basics wait mode (`waitMode.ts`), progress/locking/BPM increase (`progress.ts`) and `localStorage` persistence (`storage.ts`), all pure and unit-tested.
-3. **Rhythm-mode UI** *(done)*: Home (level bar, in-order exercise list, style + theme switch), Play (count-in, live highway, judgments, combo, results, diagram on D, Esc to stop) and Basics (wait mode). Routes: `#/`, `#/basics`, `#/play/1`–`4`, `#/lab` (detection prototype).
+3. **Rhythm-mode UI** *(done)*: Home (level bar, in-order exercise list, style + theme switch), Play (count-in, live highway, judgments, combo, results, diagram on D, Start/Stop on Space, Esc to leave) and Basics (wait mode). Routes: `#/`, `#/basics`, `#/play/1`–`4`, `#/lab` (detection prototype).
 4. **Onboarding** (mic check, tuner, latency calibration in-app instead of the lab) and a settings screen (fret window, metronome volume).
 5. **Practice mode**, a proper Increase BPM celebration (the basic increase flow already works), and pause instead of stop.
 

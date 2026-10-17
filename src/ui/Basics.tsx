@@ -16,6 +16,7 @@ import { NATURALS, expectedMidi, midiToName, stringLabel, type Natural } from '.
 import { SelectionBox, Stripe, Tag } from './decor'
 import { FretDiagram } from './FretDiagram'
 import { Highway, type Flash } from './Highway'
+import { StartStop } from './controls'
 import './play.css'
 
 interface Props {
@@ -32,13 +33,16 @@ interface Run {
   id: number
   note: Natural
   counts: boolean
+  /** False while the run sits ready, waiting for Start; the mic is ignored. */
+  started: boolean
   steps: Step[]
   expected: number[]
 }
 
+let runIds = 0
+
 export function Basics({ progress, windowStart, onRunCleared, onPickNote, onSkip }: Props) {
   const [engine, setEngine] = useState<AudioEngine | null>(null)
-  const [run, setRun] = useState<Run | null>(null)
   const [wait, setWait] = useState<WaitState>(startWait)
   const [wrong, setWrong] = useState<string | null>(null)
   const [flashes, setFlashes] = useState<Flash[]>([])
@@ -56,9 +60,75 @@ export function Basics({ progress, windowStart, onRunCleared, onPickNote, onSkip
   const [picking, setPicking] = useState(false)
   const pickingRef = useRef(picking)
   pickingRef.current = picking
-  const restartRef = useRef<(() => void) | null>(null)
-  const randomRef = useRef<(() => void) | null>(null)
   const [diagram, setDiagram] = useState(true)
+
+  /**
+   * Lay out a run, not started: the queued note, or `picked` (which counts
+   * if it still has a run left, and moves to the front of the queue).
+   */
+  const layOut = (picked?: Natural): Run => {
+    let note: Natural
+    let counts: boolean
+    if (picked) {
+      note = picked
+      counts = !basicsDone(progress) && basicsRunsLeft(progress, picked) > 0
+      if (counts) onPickNote(picked)
+    } else {
+      const queued = nextBasicsNote(progress)
+      note = queued ?? NATURALS[Math.floor(Math.random() * NATURALS.length)]
+      counts = queued !== null
+    }
+    const steps = singleNoteRun(note)
+    return { id: ++runIds, note, counts, started: false, steps, expected: steps.map((s) => expectedMidi(s.note, s.string, windowStart)) }
+  }
+  const [run, setRun] = useState<Run>(() => layOut())
+
+  const clearRun = () => {
+    const fresh = startWait()
+    waitRef.current = fresh
+    setWait(fresh)
+    setWrong(null)
+    setFlashes([])
+    setPicking(false)
+  }
+  /** Show `r` ready to start. */
+  const show = (r: Run) => {
+    clearRun()
+    setRun(r)
+  }
+  /** Start listening for `r`. Needs a user gesture (the mic opens on the first one). */
+  const begin = async (r: Run) => {
+    setError(null)
+    try {
+      const e = engine ?? (await getAudioEngine())
+      setEngine(e)
+      clearRun()
+      setRun({ ...r, started: true })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err))
+    }
+  }
+  /** Switch notes, keeping a started run going. */
+  const goTo = (r: Run) => (run.started ? begin(r) : show(r))
+
+  /** Space / the Start-Stop button. Stopping keeps you here with the note ready again. */
+  const toggle = () => {
+    if (!run.started) return void begin(run)
+    show(wait.done ? layOut() : layOut(run.note))
+  }
+  /** The same note again from the top, right away. */
+  const restart = () => begin(layOut(run.note))
+  /** A random different note, preferring ones whose run still counts. */
+  const random = () => {
+    const others = NATURALS.filter((n) => n !== run.note)
+    const counting = basicsDone(progress) ? [] : others.filter((n) => basicsRunsLeft(progress, n) > 0)
+    const pool = counting.length ? counting : others
+    goTo(layOut(pool[Math.floor(Math.random() * pool.length)]))
+  }
+
+  // Shortcuts call the latest handlers through refs so the listener stays put.
+  const keys = useRef({ toggle, restart, random })
+  keys.current = { toggle, restart, random }
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -69,22 +139,34 @@ export function Basics({ progress, windowStart, onRunCleared, onPickNote, onSkip
         return
       }
       if (e.target instanceof HTMLInputElement) return
-      if (e.key === 'd' || e.key === 'D') setDiagram((d) => !d)
-      if (e.key === 'r' || e.key === 'R') {
-        if (!e.repeat) restartRef.current?.()
-      }
-      // Tab jumps to a random note (Shift+Tab still moves focus back).
-      if (e.key === 'Tab' && !e.shiftKey && randomRef.current) {
+      if (e.code === 'Space') {
+        // Not a click on whatever button has focus, and not a page scroll.
         e.preventDefault()
-        if (!e.repeat) randomRef.current()
+        if (!e.repeat) keys.current.toggle()
+        return
+      }
+      if (e.key === 'd' || e.key === 'D') setDiagram((d) => !d)
+      if ((e.key === 'r' || e.key === 'R') && !e.repeat) keys.current.restart()
+      // Tab jumps to a random note (Shift+Tab still moves focus back).
+      if (e.key === 'Tab' && !e.shiftKey) {
+        e.preventDefault()
+        if (!e.repeat) keys.current.random()
       }
     }
+    // A focused button would also act on Space's keyup.
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (e.code === 'Space' && !(e.target instanceof HTMLInputElement)) e.preventDefault()
+    }
     addEventListener('keydown', onKey)
-    return () => removeEventListener('keydown', onKey)
+    addEventListener('keyup', onKeyUp)
+    return () => {
+      removeEventListener('keydown', onKey)
+      removeEventListener('keyup', onKeyUp)
+    }
   }, [])
 
   useEffect(() => {
-    if (!engine || !run) return
+    if (!engine || !run.started) return
     return engine.onNote((ev) => {
       const prev = waitRef.current
       const { state, outcome } = feedWait(prev, run.expected, ev.midi)
@@ -104,46 +186,6 @@ export function Basics({ progress, windowStart, onRunCleared, onPickNote, onSkip
     })
   }, [engine, run, onRunCleared])
 
-  /** Start a run: the queued note, or `picked` (which counts if it still has runs left). */
-  const start = async (picked?: Natural) => {
-    setError(null)
-    setPicking(false)
-    try {
-      const e = engine ?? (await getAudioEngine())
-      setEngine(e)
-      let note: Natural
-      let counts: boolean
-      if (picked) {
-        note = picked
-        counts = !basicsDone(progress) && basicsRunsLeft(progress, picked) > 0
-        if (counts) onPickNote(picked)
-      } else {
-        const queued = nextBasicsNote(progress)
-        note = queued ?? NATURALS[Math.floor(Math.random() * NATURALS.length)]
-        counts = queued !== null
-      }
-      const steps = singleNoteRun(note)
-      setRun({ id: Date.now(), note, counts, steps, expected: steps.map((s) => expectedMidi(s.note, s.string, windowStart)) })
-      const fresh = startWait()
-      waitRef.current = fresh
-      setWait(fresh)
-      setWrong(null)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
-    }
-  }
-  /** Play the same note again from the top. */
-  const restart = () => run && start(run.note)
-  restartRef.current = run && engine ? restart : null
-  /** A random different note, preferring ones whose run still counts. */
-  const random = () => {
-    const others = NATURALS.filter((n) => n !== run?.note)
-    const counting = basicsDone(progress) ? [] : others.filter((n) => basicsRunsLeft(progress, n) > 0)
-    const pool = counting.length ? counting : others
-    start(pool[Math.floor(Math.random() * pool.length)])
-  }
-  randomRef.current = run && engine ? random : null
-
   const total = progress.basics.queue.length
   const cleared = progress.basics.cleared
   const header = (
@@ -153,62 +195,36 @@ export function Basics({ progress, windowStart, onRunCleared, onPickNote, onSkip
           <path d="M15 18l-6-6 6-6" />
         </svg>
         <span className="back-name">Basics</span>
+        <span className="label muted">Esc</span>
       </a>
-      <span className="label muted">
+      <span className="head-side label muted">
         {cleared}/{total} runs · no metronome
+        {!basicsDone(progress) && (
+          <button
+            type="button"
+            className="link-btn"
+            onClick={() => {
+              onSkip()
+              navigate('/')
+            }}
+          >
+            Skip Basics
+          </button>
+        )}
       </span>
     </div>
   )
-
-  if (!run || !engine) {
-    return (
-      <main className="page play">
-        {header}
-        <section className="ready">
-          <h1 className="display">Basics</h1>
-          <p className="muted">
-            Find one note on every string, 6 → 1 and back, three times. Take your time: the app waits for each
-            note, and a wrong note just shows what it heard. Look at the diagram as much as you like. To play
-            a different note, click the big letter. Press Tab for a random note, D to toggle the diagram, R to restart a run, Esc to leave.
-          </p>
-          <p>
-            {basicsDone(progress)
-              ? 'Basics is complete. Replays are for warming up and don’t count.'
-              : `${cleared} of ${total} runs cleared. Finish all ${total} to unlock Exercise 1.`}
-          </p>
-          <div className="ready-actions">
-            <button type="button" className="btn primary" onClick={() => start()}>
-              Start
-            </button>
-            {!basicsDone(progress) && (
-              <button
-                type="button"
-                className="btn ghost"
-                onClick={() => {
-                  onSkip()
-                  navigate('/')
-                }}
-              >
-                Skip Basics
-              </button>
-            )}
-          </div>
-          {error && (
-            <p role="alert" style={{ color: 'var(--wrong)' }}>
-              {error}
-            </p>
-          )}
-        </section>
-        {diagram && <FretDiagram windowStart={windowStart} />}
-      </main>
-    )
-  }
 
   const current = run.steps[Math.min(wait.pos, run.steps.length - 1)]
 
   return (
     <main className="page play">
       {header}
+      {error && (
+        <p role="alert" style={{ color: 'var(--wrong)', margin: 0 }}>
+          {error}
+        </p>
+      )}
       <section className="target-row">
         <div className="target">
           <div className="note-pick-wrap">
@@ -232,7 +248,7 @@ export function Basics({ progress, windowStart, onRunCleared, onPickNote, onSkip
               <NotePicker
                 current={run.note}
                 runsLeft={(n) => (basicsDone(progress) ? null : basicsRunsLeft(progress, n))}
-                onPick={(n) => start(n)}
+                onPick={(n) => goTo(layOut(n))}
                 onClose={() => setPicking(false)}
               />
             )}
@@ -244,7 +260,8 @@ export function Basics({ progress, windowStart, onRunCleared, onPickNote, onSkip
         </div>
         <div className="feedback" aria-live="polite">
           <span className="judgment-slot wide">
-            {wrong && (
+            {!run.started && <span className="muted">Press Space to start</span>}
+            {run.started && wrong && (
               <>
                 <Tag>Wrong</Tag>
                 <span className="muted">
@@ -276,7 +293,7 @@ export function Basics({ progress, windowStart, onRunCleared, onPickNote, onSkip
                 On to Exercise 01
               </a>
             ) : (
-              <button type="button" className="btn primary" onClick={() => start()} autoFocus>
+              <button type="button" className="btn primary" onClick={() => show(layOut())} autoFocus>
                 Next note
               </button>
             )}
@@ -311,9 +328,7 @@ export function Basics({ progress, windowStart, onRunCleared, onPickNote, onSkip
           <button type="button" className="btn" aria-pressed={diagram} onClick={() => setDiagram((d) => !d)}>
             Diagram <span className="label muted">D</span>
           </button>
-          <a className="btn ghost" href="#/">
-            Stop <span className="label muted">Esc</span>
-          </a>
+          <StartStop started={run.started} onToggle={toggle} />
         </div>
       </section>
 
