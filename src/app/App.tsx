@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { canIncreaseBpm, increaseBpm, pickBasicsNote, recordBasicsClear, recordRun, type Progress } from '../engine/progress'
+import { canIncreaseBpm, increaseBpm, pickBasicsNote, recordBasicsClear, recordRun, skipBasics, type Progress } from '../engine/progress'
 import type { ExerciseId } from '../engine/pools'
 import { loadProgress, saveProgress } from '../engine/storage'
 import { App as Lab } from '../prototype/App'
@@ -50,6 +50,7 @@ export function App() {
 
   const onBasicsCleared = useCallback(() => setProgress((p) => recordBasicsClear(p)), [])
   const onBasicsPick = useCallback((note: Natural) => setProgress((p) => pickBasicsNote(p, note)), [])
+  const onSkipBasics = useCallback(() => setProgress((p) => skipBasics(p)), [])
   const exercise = route.name === 'play' ? route.exercise : null
   const onRunFinished = useCallback(
     (cleared: boolean) => {
@@ -87,6 +88,7 @@ export function App() {
             progress={progress}
             settings={settings}
             onSettings={updateSettings}
+            onSkipBasics={onSkipBasics}
             onIncreaseBpm={(delta) => {
               if (canIncreaseBpm(progress)) setProgress(increaseBpm(progress, delta, Math.random))
             }}
@@ -99,6 +101,7 @@ export function App() {
             windowStart={settings.windowStart}
             onRunCleared={onBasicsCleared}
             onPickNote={onBasicsPick}
+            onSkip={onSkipBasics}
           />
         )}
         {route.name === 'play' && (

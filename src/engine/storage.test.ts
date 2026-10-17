@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { newProgress, recordBasicsClear } from './progress'
 import { seeded } from './rng'
-import { loadProgress, saveProgress } from './storage'
+import { clearLocalData, loadProgress, saveProgress } from './storage'
 
 function memoryStorage(): Storage {
   const data = new Map<string, string>()
@@ -18,6 +18,17 @@ function memoryStorage(): Storage {
 }
 
 describe('storage', () => {
+  it('clears only this app\'s keys', () => {
+    const s = memoryStorage()
+    saveProgress(newProgress(seeded(1)), s)
+    s.setItem('fmt.settings', '{}')
+    s.setItem('fmt.latencyMs', '40')
+    s.setItem('other.app', 'keep')
+    clearLocalData(s)
+    expect(s.length).toBe(1)
+    expect(s.getItem('other.app')).toBe('keep')
+  })
+
   it('round-trips progress', () => {
     const s = memoryStorage()
     const p = recordBasicsClear(newProgress(seeded(1)))

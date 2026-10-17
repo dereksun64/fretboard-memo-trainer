@@ -52,6 +52,8 @@ Basics ─▶ Exercise 1 ─▶ Exercise 2 ─▶ Exercise 3 ─▶ Exercise 4 �
 - **One run** is a single natural note: 6→1→6, ×3 (36 notes).
 - A wrong note doesn't restart or fail the run. The app shows what it heard ("Wrong · heard G#3, try again") and keeps waiting for the correct note. The results mention how many wrong notes there were.
 - **Pick a note**: clicking the big letter opens a picker of the 7 naturals, each showing how many of its runs are left (no letter shortcuts; click a note to pick it, Esc or a click outside closes it). A pick with runs left moves that note to the front of the queue, so the run counts and the queue still holds each note once. A note with none left (or any pick once Basics is done) plays as a replay that doesn't count.
+- **Random note** (Tab, or the footer button) jumps to a random different note, preferring notes whose run still counts. Shift+Tab still moves focus.
+- **Skip Basics** (on the Basics start screen, and *Skip* on its Home row) marks Basics done and unlocks Exercise 1.
 - **Completion** takes one run of each of the 7 naturals, 7 runs in all, in a shuffled order.
 - Finishing it unlocks Exercise 1.
 
@@ -202,3 +204,8 @@ One layout, the calm **Minimal** layout (direction B on the design canvas), with
 - Weak-note drills or anything beyond Thomas's method.
 - Alternate tunings, left-handed layout, mobile.
 - Saving or playing back audio.
+
+## Local data
+
+- Everything lives in this browser's localStorage under `fmt.*` keys (progress, appearance settings, latency and visual calibration).
+- **Clear local data** (Home footer) asks for confirmation, then erases all `fmt.*` keys and reloads for a full restart.

@@ -14,6 +14,7 @@ import {
   nextItem,
   recordBasicsClear,
   recordRun,
+  skipBasics,
   type Progress,
 } from './progress'
 import type { ExerciseId } from './pools'
@@ -61,6 +62,13 @@ describe('progress', () => {
     expect(isUnlocked(p, 1)).toBe(true)
     expect(isUnlocked(p, 2)).toBe(false)
     expect(currentExercise(p)).toBe(1)
+  })
+
+  it('skipping Basics unlocks Exercise 1', () => {
+    const p = skipBasics(recordBasicsClear(newProgress(seeded(8))))
+    expect(nextBasicsNote(p)).toBeNull()
+    expect(isUnlocked(p, 1)).toBe(true)
+    expect(skipBasics(p)).toBe(p)
   })
 
   it('unlocks exercises strictly in order', () => {

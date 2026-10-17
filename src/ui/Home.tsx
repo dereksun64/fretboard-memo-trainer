@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { Settings } from '../app/settings'
+import { clearLocalData } from '../engine/storage'
 import { EXERCISES } from '../engine/pools'
 import {
   DEFAULT_INCREASE,
@@ -27,9 +28,10 @@ interface Props {
   settings: Settings
   onSettings: (patch: Partial<Settings>) => void
   onIncreaseBpm: (delta: number) => void
+  onSkipBasics: () => void
 }
 
-export function Home({ progress, settings, onSettings, onIncreaseBpm }: Props) {
+export function Home({ progress, settings, onSettings, onIncreaseBpm, onSkipBasics }: Props) {
   const style = useStyle()
   const level = progress.level
   const bar = levelBar(level)
@@ -110,9 +112,16 @@ export function Home({ progress, settings, onSettings, onIncreaseBpm }: Props) {
               {progress.basics.cleared}/{progress.basics.queue.length} runs
             </span>
           </div>
-          <a className={`btn ${basicsCleared ? '' : 'primary'}`} href="#/basics">
-            {basicsCleared ? 'Replay' : 'Play'}
-          </a>
+          <div className="row-actions">
+            {!basicsCleared && (
+              <button type="button" className="btn ghost" onClick={onSkipBasics}>
+                Skip
+              </button>
+            )}
+            <a className={`btn ${basicsCleared ? '' : 'primary'}`} href="#/basics">
+              {basicsCleared ? 'Replay' : 'Play'}
+            </a>
+          </div>
         </div>
 
         {EXERCISES.map((ex) => {
@@ -165,6 +174,7 @@ export function Home({ progress, settings, onSettings, onIncreaseBpm }: Props) {
         <span>
           <a href="#/about">About</a> · <a href="#/about">Your audio never leaves this device</a>
         </span>
+        <ClearData />
       </footer>
     </main>
   )
@@ -193,5 +203,38 @@ function IncreaseBpm({ level, onIncrease }: { level: number; onIncrease: (delta:
         </button>
       </div>
     </section>
+  )
+}
+
+/** Erase progress, settings and calibration, then start over. Asks first. */
+function ClearData() {
+  const [confirming, setConfirming] = useState(false)
+  if (!confirming) {
+    return (
+      <span className="clear-data">
+        <button type="button" className="link-btn" onClick={() => setConfirming(true)}>
+          Clear local data
+        </button>
+      </span>
+    )
+  }
+  return (
+    <span className="clear-data" role="group" aria-label="Confirm clearing local data">
+      <span style={{ color: 'var(--ink)' }}>Erase all progress, settings and calibration?</span>
+      <button
+        type="button"
+        className="btn danger"
+        onClick={() => {
+          clearLocalData()
+          location.hash = '#/'
+          location.reload()
+        }}
+      >
+        Erase and restart
+      </button>
+      <button type="button" className="btn ghost" onClick={() => setConfirming(false)} autoFocus>
+        Cancel
+      </button>
+    </span>
   )
 }

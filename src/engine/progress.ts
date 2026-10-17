@@ -58,6 +58,12 @@ export function nextBasicsNote(p: Progress): Natural | null {
   return basicsDone(p) ? null : p.basics.queue[p.basics.cleared]
 }
 
+/** Mark every Basics run cleared, unlocking Exercise 1. */
+export function skipBasics(p: Progress): Progress {
+  if (basicsDone(p)) return p
+  return { ...p, basics: { ...p.basics, cleared: p.basics.queue.length } }
+}
+
 /** Runs of `note` still to clear in Basics (0 or 1). */
 export function basicsRunsLeft(p: Progress, note: Natural): number {
   return p.basics.queue.slice(p.basics.cleared).filter((n) => n === note).length
