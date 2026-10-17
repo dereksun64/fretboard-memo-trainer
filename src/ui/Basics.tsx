@@ -55,6 +55,8 @@ export function Basics({ progress, windowStart, onRunCleared, onPickNote }: Prop
   const pickingRef = useRef(picking)
   pickingRef.current = picking
   const startRef = useRef<(note?: Natural) => void>(() => {})
+  const restartRef = useRef<(() => void) | null>(null)
+  const [diagram, setDiagram] = useState(true)
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -64,9 +66,14 @@ export function Basics({ progress, windowStart, onRunCleared, onPickNote }: Prop
         else navigate('/')
         return
       }
-      // With the picker open, typing a letter picks that note.
+      if (e.target instanceof HTMLInputElement) return
+      // With the picker open, typing a letter picks that note (D included).
       const letter = e.key.toUpperCase() as Natural
-      if (pickingRef.current && NATURALS.includes(letter)) startRef.current(letter)
+      if (pickingRef.current && NATURALS.includes(letter)) return startRef.current(letter)
+      if (letter === 'D') setDiagram((d) => !d)
+      if (e.key === 'r' || e.key === 'R') {
+        if (!e.repeat) restartRef.current?.()
+      }
     }
     addEventListener('keydown', onKey)
     return () => removeEventListener('keydown', onKey)
@@ -122,6 +129,9 @@ export function Basics({ progress, windowStart, onRunCleared, onPickNote }: Prop
     }
   }
   startRef.current = start
+  /** Play the same note again from the top. */
+  const restart = () => run && start(run.note)
+  restartRef.current = run && engine ? restart : null
 
   const total = progress.basics.queue.length
   const cleared = progress.basics.cleared
@@ -148,7 +158,7 @@ export function Basics({ progress, windowStart, onRunCleared, onPickNote }: Prop
           <p className="muted">
             Find one note on every string, 6 → 1 and back, three times. Take your time: the app waits for each
             note, and a wrong note just shows what it heard. Look at the diagram as much as you like. To play
-            a different note, click the big letter.
+            a different note, click the big letter. Press D to toggle the diagram, R to restart a run, Esc to leave.
           </p>
           <p>
             {basicsDone(progress)
@@ -166,7 +176,7 @@ export function Basics({ progress, windowStart, onRunCleared, onPickNote }: Prop
             </p>
           )}
         </section>
-        <FretDiagram windowStart={windowStart} />
+        {diagram && <FretDiagram windowStart={windowStart} />}
       </main>
     )
   }
@@ -255,7 +265,33 @@ export function Basics({ progress, windowStart, onRunCleared, onPickNote }: Prop
       )}
       </div>
 
-      <FretDiagram windowStart={windowStart} />
+      <section className="play-foot">
+        <div className="counts">
+          <span className="count">
+            <span className="dot perfect" />
+            <span className="count-num mono">{wait.pos}</span>
+            <span className="label muted">hit</span>
+          </span>
+          <span className="count">
+            <span className="dot wrong" />
+            <span className="count-num mono">{wait.wrong}</span>
+            <span className="label muted">wrong</span>
+          </span>
+        </div>
+        <div className="foot-actions">
+          <button type="button" className="btn" onClick={restart}>
+            Restart <span className="label muted">R</span>
+          </button>
+          <button type="button" className="btn" aria-pressed={diagram} onClick={() => setDiagram((d) => !d)}>
+            Diagram <span className="label muted">D</span>
+          </button>
+          <a className="btn ghost" href="#/">
+            Stop <span className="label muted">Esc</span>
+          </a>
+        </div>
+      </section>
+
+      {diagram && <FretDiagram windowStart={windowStart} />}
     </main>
   )
 }
