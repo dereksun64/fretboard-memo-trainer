@@ -104,11 +104,12 @@ For each beat, the app compares the detected note onset (after the latency offse
 - **Wrong** = an onset inside the window with the wrong pitch.
 - **Cleared** = zero Wrong and zero Miss. Perfect and Good both count as clean.
 - **Accuracy** = (Perfect + 0.9 × Good) ÷ judged beats. **Combo** counts consecutive Perfect/Good and resets on Miss or Wrong.
-- **First Miss pauses the run**: the metronome stops, a soft error sound plays, and a popup offers **Restart run** (suggested, focused) or **Continue**, with a small *Calibrate in lab →* link.
-  - *Restart* replays the same run from the top; the abandoned attempt isn't recorded.
-  - *Continue* resumes from the next note after a 2-click count-in; notes played during the pause are ignored. The run still ends *Failed* and is recorded as a fail.
-  - Only once per run, and not when the miss is the last beat (the results show instead).
-- A **Wrong** note fails the run without pausing; it keeps playing to the end so the practice still counts as reps, then shows *Failed*.
+- **Runs always play to the end.** Misses and wrong notes never stop or pause the run; detection errors are too common for that.
+- **Restart** (button beside Diagram, shortcut **R**) replays the same run from the top at any time; the abandoned attempt isn't recorded.
+- **With mistakes**, the end of the run plays a soft error sound and a popup says *We think you made a few mistakes (2 missed, 1 wrong). Try again?*, with the stats, a small *Calibrate in lab →* link and two buttons:
+  - **Try again** (suggested, focused) replays the same run. Nothing is recorded.
+  - **I think I got it** counts the run as cleared, for when the mic misheard.
+  - Leaving without choosing records nothing.
 
 **Pitch matching:**
 - The expected pitch is the exact note, octave included, of the target note on the target string within the active 12-fret window.
@@ -126,7 +127,7 @@ For each beat, the app compares the detected note onset (after the latency offse
 - **Basics uses the same highway**: each correct note slides the next onto the hit line; a wrong note scrolls back to the start with a red burst.
 - Perfect / Good / Miss / Wrong judgments appear on each hit.
 - Combo counter.
-- Results screen: Cleared/Failed, accuracy, Perfect/Good counts, max combo.
+- Results screen: Cleared (or the mistakes popup), accuracy, Perfect/Good counts, max combo.
 - A short celebration when you increase BPM.
 - Rainbow progress bar past 80.
 
