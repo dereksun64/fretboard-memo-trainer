@@ -1,6 +1,7 @@
 // Basics (Thomas's Exercise 1): wait mode. No metronome; each correct note
 // slides the next one onto the hit line; a wrong one is flagged and the app
-// keeps waiting for the right note. The diagram stays visible.
+// keeps waiting for the right note. The diagram stays visible. Clicking the
+// big letter picks which note to play.
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { getAudioEngine } from '../app/audio'
@@ -8,7 +9,7 @@ import { navigate } from '../app/navigate'
 import { useFrameValue } from '../app/useNow'
 import type { AudioEngine } from '../audio/engine'
 import type { BeatResult, BeatTarget } from '../engine/judge'
-import { basicsDone, nextBasicsNote, type Progress } from '../engine/progress'
+import { basicsDone, basicsRunsLeft, nextBasicsNote, type Progress } from '../engine/progress'
 import { singleNoteRun, type Step } from '../engine/sequence'
 import { feedWait, startWait, type WaitState } from '../engine/waitMode'
 import { NATURALS, expectedMidi, midiToName, stringLabel, type Natural } from '../music/notes'
@@ -21,6 +22,8 @@ interface Props {
   progress: Progress
   windowStart: number
   onRunCleared: () => void
+  /** Move `note` to the front of the Basics queue so a run of it counts. */
+  onPickNote: (note: Natural) => void
 }
 
 interface Run {
@@ -31,7 +34,7 @@ interface Run {
   expected: number[]
 }
 
-export function Basics({ progress, windowStart, onRunCleared }: Props) {
+export function Basics({ progress, windowStart, onRunCleared, onPickNote }: Props) {
   const [engine, setEngine] = useState<AudioEngine | null>(null)
   const [run, setRun] = useState<Run | null>(null)
   const [wait, setWait] = useState<WaitState>(startWait)
@@ -47,10 +50,23 @@ export function Basics({ progress, windowStart, onRunCleared }: Props) {
   const [error, setError] = useState<string | null>(null)
   const waitRef = useRef(wait)
   waitRef.current = wait
+  // The note picker opened from the big letter.
+  const [picking, setPicking] = useState(false)
+  const pickingRef = useRef(picking)
+  pickingRef.current = picking
+  const startRef = useRef<(note?: Natural) => void>(() => {})
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') navigate('/')
+      if (e.metaKey || e.ctrlKey || e.altKey) return
+      if (e.key === 'Escape') {
+        if (pickingRef.current) setPicking(false)
+        else navigate('/')
+        return
+      }
+      // With the picker open, typing a letter picks that note.
+      const letter = e.key.toUpperCase() as Natural
+      if (pickingRef.current && NATURALS.includes(letter)) startRef.current(letter)
     }
     addEventListener('keydown', onKey)
     return () => removeEventListener('keydown', onKey)
@@ -77,15 +93,26 @@ export function Basics({ progress, windowStart, onRunCleared }: Props) {
     })
   }, [engine, run, onRunCleared])
 
-  const start = async () => {
+  /** Start a run: the queued note, or `picked` (which counts if it still has runs left). */
+  const start = async (picked?: Natural) => {
     setError(null)
+    setPicking(false)
     try {
       const e = engine ?? (await getAudioEngine())
       setEngine(e)
-      const queued = nextBasicsNote(progress)
-      const note = queued ?? NATURALS[Math.floor(Math.random() * NATURALS.length)]
+      let note: Natural
+      let counts: boolean
+      if (picked) {
+        note = picked
+        counts = !basicsDone(progress) && basicsRunsLeft(progress, picked) > 0
+        if (counts) onPickNote(picked)
+      } else {
+        const queued = nextBasicsNote(progress)
+        note = queued ?? NATURALS[Math.floor(Math.random() * NATURALS.length)]
+        counts = queued !== null
+      }
       const steps = singleNoteRun(note)
-      setRun({ id: Date.now(), note, counts: queued !== null, steps, expected: steps.map((s) => expectedMidi(s.note, s.string, windowStart)) })
+      setRun({ id: Date.now(), note, counts, steps, expected: steps.map((s) => expectedMidi(s.note, s.string, windowStart)) })
       const fresh = startWait()
       waitRef.current = fresh
       setWait(fresh)
@@ -94,6 +121,7 @@ export function Basics({ progress, windowStart, onRunCleared }: Props) {
       setError(err instanceof Error ? err.message : String(err))
     }
   }
+  startRef.current = start
 
   const total = progress.basics.queue.length
   const cleared = progress.basics.cleared
@@ -119,7 +147,8 @@ export function Basics({ progress, windowStart, onRunCleared }: Props) {
           <h1 className="display">Basics</h1>
           <p className="muted">
             Find one note on every string, 6 → 1 and back, three times. Take your time: the app waits for each
-            note, and a wrong note just shows what it heard. Look at the diagram as much as you like.
+            note, and a wrong note just shows what it heard. Look at the diagram as much as you like. To play
+            a different note, click the big letter.
           </p>
           <p>
             {basicsDone(progress)
@@ -127,7 +156,7 @@ export function Basics({ progress, windowStart, onRunCleared }: Props) {
               : `${cleared} of ${total} runs cleared. Finish all ${total} to unlock Exercise 1.`}
           </p>
           <div>
-            <button type="button" className="btn primary" onClick={start}>
+            <button type="button" className="btn primary" onClick={() => start()}>
               Start
             </button>
           </div>
@@ -149,9 +178,32 @@ export function Basics({ progress, windowStart, onRunCleared }: Props) {
       {header}
       <section className="target-row">
         <div className="target">
-          <SelectionBox>
-            <span className="target-note display">{run.note}</span>
-          </SelectionBox>
+          <div className="note-pick-wrap">
+            <SelectionBox>
+              <button
+                type="button"
+                className="target-note display note-pick"
+                aria-haspopup="true"
+                aria-expanded={picking}
+                aria-label={`Note ${run.note}. Pick a different note`}
+                title="Pick a note"
+                onClick={() => setPicking((v) => !v)}
+              >
+                {run.note}
+                <span className="note-pick-hint" aria-hidden="true">
+                  Pick a note…
+                </span>
+              </button>
+            </SelectionBox>
+            {picking && (
+              <NotePicker
+                current={run.note}
+                runsLeft={(n) => (basicsDone(progress) ? null : basicsRunsLeft(progress, n))}
+                onPick={(n) => start(n)}
+                onClose={() => setPicking(false)}
+              />
+            )}
+          </div>
           <div className="target-side">
             <span className="target-string">{wait.done ? 'run cleared' : `${stringLabel(current.string)} string`}</span>
             <Stripe width={96} />
@@ -191,7 +243,7 @@ export function Basics({ progress, windowStart, onRunCleared }: Props) {
                 On to Exercise 01
               </a>
             ) : (
-              <button type="button" className="btn primary" onClick={start} autoFocus>
+              <button type="button" className="btn primary" onClick={() => start()} autoFocus>
                 Next note
               </button>
             )}
@@ -237,5 +289,54 @@ function BasicsHighway({ steps, wait, flashes }: { steps: Step[]; wait: WaitStat
       approachCircles={false}
       flashes={flashes}
     />
+  )
+}
+
+/**
+ * The seven naturals under the big letter. Each shows how many of its
+ * Basics runs are left; a note with none left plays as a replay.
+ */
+function NotePicker({
+  current,
+  runsLeft,
+  onPick,
+  onClose,
+}: {
+  current: Natural
+  /** null once Basics is done (every run is a replay). */
+  runsLeft: (note: Natural) => number | null
+  onPick: (note: Natural) => void
+  onClose: () => void
+}) {
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const onDown = (e: PointerEvent) => {
+      if (!ref.current?.contains(e.target as Node) && !(e.target as Element).closest?.('.note-pick')) onClose()
+    }
+    addEventListener('pointerdown', onDown)
+    return () => removeEventListener('pointerdown', onDown)
+  }, [onClose])
+  return (
+    <div ref={ref} className="note-picker" role="menu" aria-label="Pick a note">
+      <span className="label muted note-picker-title">Pick a note</span>
+      <div className="note-picker-row">
+        {NATURALS.map((n) => {
+          const left = runsLeft(n)
+          return (
+            <button
+              key={n}
+              type="button"
+              role="menuitem"
+              className={`note-picker-btn ${n === current ? 'current' : ''} ${left === 0 ? 'spent' : ''}`}
+              onClick={() => onPick(n)}
+              autoFocus={n === current}
+            >
+              <span className="display">{n}</span>
+              <span className="label muted">{left === null ? '' : left === 0 ? 'done' : `${left} left`}</span>
+            </button>
+          )
+        })}
+      </div>
+    </div>
   )
 }

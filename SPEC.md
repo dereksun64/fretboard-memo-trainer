@@ -51,7 +51,8 @@ Basics ─▶ Exercise 1 ─▶ Exercise 2 ─▶ Exercise 3 ─▶ Exercise 4 �
 - The fretboard diagram is always visible.
 - **One run** is a single natural note: 6→1→6, ×3 (36 notes).
 - A wrong note doesn't restart or fail the run. The app shows what it heard ("Wrong · heard G#3, try again") and keeps waiting for the correct note. The results mention how many wrong notes there were.
-- **Completion** takes two full rounds of all 7 naturals, 14 runs in all. Each round draws the notes in a new shuffled order.
+- **Pick a note**: clicking the big letter opens a picker of the 7 naturals, each showing how many of its runs are left (C–B keys pick while it's open, Esc closes). A pick with runs left moves that note to the front of the queue, so the run counts and the queue still holds each note once. A note with none left (or any pick once Basics is done) plays as a replay that doesn't count.
+- **Completion** takes one run of each of the 7 naturals, 7 runs in all, in a shuffled order.
 - Finishing it unlocks Exercise 1.
 
 ### Exercises 1–4 (Thomas's Exercises 2–5)

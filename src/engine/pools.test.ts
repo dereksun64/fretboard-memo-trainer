@@ -12,12 +12,10 @@ describe('pools', () => {
   // Run every property over many seeds so random edge cases show up.
   const seeds = Array.from({ length: 200 }, (_, i) => i + 1)
 
-  it('Basics: two shuffled rounds of the 7 naturals', () => {
+  it('Basics: the 7 naturals once each, shuffled', () => {
     for (const seed of seeds) {
       const q = basicsQueue(seeded(seed))
-      expect(q).toHaveLength(14)
-      expect([...q.slice(0, 7)].sort()).toEqual([...NATURALS].sort())
-      expect([...q.slice(7)].sort()).toEqual([...NATURALS].sort())
+      expect([...q].sort()).toEqual([...NATURALS].sort())
     }
   })
 

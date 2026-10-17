@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
-import { canIncreaseBpm, increaseBpm, recordBasicsClear, recordRun, type Progress } from '../engine/progress'
+import { canIncreaseBpm, increaseBpm, pickBasicsNote, recordBasicsClear, recordRun, type Progress } from '../engine/progress'
 import type { ExerciseId } from '../engine/pools'
 import { loadProgress, saveProgress } from '../engine/storage'
 import { App as Lab } from '../prototype/App'
 import { About } from '../ui/About'
+import type { Natural } from '../music/notes'
 import { Basics } from '../ui/Basics'
 import { AppearanceControls } from '../ui/AppearanceControls'
 import { StyleContext } from '../ui/decor'
@@ -48,6 +49,7 @@ export function App() {
   useEffect(() => saveProgress(progress), [progress])
 
   const onBasicsCleared = useCallback(() => setProgress((p) => recordBasicsClear(p)), [])
+  const onBasicsPick = useCallback((note: Natural) => setProgress((p) => pickBasicsNote(p, note)), [])
   const exercise = route.name === 'play' ? route.exercise : null
   const onRunFinished = useCallback(
     (cleared: boolean) => {
@@ -96,6 +98,7 @@ export function App() {
             progress={progress}
             windowStart={settings.windowStart}
             onRunCleared={onBasicsCleared}
+            onPickNote={onBasicsPick}
           />
         )}
         {route.name === 'play' && (

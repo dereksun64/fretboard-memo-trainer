@@ -526,3 +526,117 @@
   color: var(--ink);
   text-decoration: underline;
 }
+
+/* ---- Basics note picker (opened from the big letter) ---- */
+.note-pick-wrap {
+  position: relative;
+}
+.note-pick {
+  position: relative;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  border-radius: var(--radius);
+}
+.note-pick:hover,
+.note-pick[aria-expanded='true'] {
+  background: var(--track);
+}
+/* Sits just under the letter, so the letter box keeps its fixed size. */
+.note-pick-hint {
+  position: absolute;
+  left: 6px;
+  top: calc(100% + 4px);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: normal;
+  white-space: nowrap;
+  color: var(--muted);
+}
+.note-pick:hover .note-pick-hint {
+  color: var(--ink);
+}
+.note-pick:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.note-picker {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 26px);
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  background: var(--bg);
+  border: 1px solid var(--ink);
+  border-radius: var(--radius);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+}
+:root[data-style='blueprint'] .note-picker {
+  box-shadow: none;
+  border-color: var(--accent);
+  border-radius: 0;
+}
+:root[data-style='retro'] .note-picker {
+  border-radius: 0;
+}
+.note-picker-title {
+  font-size: 12px;
+}
+.note-picker-row {
+  display: flex;
+  gap: 6px;
+}
+.note-picker-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 54px;
+  padding: 8px 0 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+.note-picker-btn .display {
+  font-size: 26px;
+  line-height: 1;
+}
+.note-picker-btn .label {
+  height: 1.2em;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.note-picker-btn:hover {
+  border-color: var(--ink);
+}
+.note-picker-btn.current {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--bg);
+}
+.note-picker-btn.current .label {
+  color: inherit;
+  opacity: 0.7;
+}
+.note-picker-btn.spent {
+  opacity: 0.55;
+}
+:root[data-style='retro'] .note-picker-btn {
+  border-radius: 0;
+}
+:root[data-style='retro'] .note-picker-btn.current {
+  background: var(--accent);
+  border-color: var(--accent);
+}
