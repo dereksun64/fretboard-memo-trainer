@@ -23,11 +23,9 @@ export type PoolItem =
   /** Exercise 4: a random order of the 7 naturals, alternating direction. */
   | { kind: 'sequence'; notes: Natural[] }
 
-export const BASICS_ROUNDS = 2
-
-/** Basics: two rounds of all 7 naturals, each round freshly shuffled (14 runs). */
+/** Basics: each of the 7 naturals once, shuffled (7 runs). */
 export function basicsQueue(rng: Rng): Natural[] {
-  return Array.from({ length: BASICS_ROUNDS }, () => shuffle(NATURALS, rng)).flat()
+  return shuffle(NATURALS, rng)
 }
 
 function randomSpelling(rng: Rng): 'sharp' | 'flat' {

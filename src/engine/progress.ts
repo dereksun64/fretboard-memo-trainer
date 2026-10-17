@@ -3,7 +3,7 @@
 // and persist it as-is.
 //
 // Rules (see SPEC.md):
-// - Basics (14 runs) is done once and unlocks Exercise 1.
+// - Basics (7 runs, one per natural) is done once and unlocks Exercise 1.
 // - Within a level, exercises unlock in order: an exercise opens when the
 //   previous one's whole pool is cleared.
 // - Clearing all four exercises lets you increase the BPM by 1-10; the new
@@ -56,6 +56,25 @@ export function basicsDone(p: Progress): boolean {
 /** The note for the next Basics run, or null when Basics is done. */
 export function nextBasicsNote(p: Progress): Natural | null {
   return basicsDone(p) ? null : p.basics.queue[p.basics.cleared]
+}
+
+/** Runs of `note` still to clear in Basics (0 or 1). */
+export function basicsRunsLeft(p: Progress, note: Natural): number {
+  return p.basics.queue.slice(p.basics.cleared).filter((n) => n === note).length
+}
+
+/**
+ * Play `note` next instead of the queued one: swaps it to the front of the
+ * remaining queue, so the run counts and the queue still holds each note
+ * once. Unchanged if `note` has no runs left (then a run of it is a replay).
+ */
+export function pickBasicsNote(p: Progress, note: Natural): Progress {
+  const { queue, cleared } = p.basics
+  const j = queue.indexOf(note, cleared)
+  if (basicsDone(p) || j === -1 || j === cleared) return p
+  const next = [...queue]
+  ;[next[cleared], next[j]] = [next[j], next[cleared]]
+  return { ...p, basics: { ...p.basics, queue: next } }
 }
 
 /** Basics runs only end when cleared (wait mode waits through wrong notes). */

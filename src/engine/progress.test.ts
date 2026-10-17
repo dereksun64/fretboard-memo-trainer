@@ -8,7 +8,9 @@ import {
   isUnlocked,
   levelBar,
   newProgress,
+  basicsRunsLeft,
   nextBasicsNote,
+  pickBasicsNote,
   nextItem,
   recordBasicsClear,
   recordRun,
@@ -36,9 +38,23 @@ describe('progress', () => {
     for (const ex of [1, 2, 3, 4] as const) expect(isUnlocked(p, ex)).toBe(false)
   })
 
-  it('Basics takes 14 cleared runs and unlocks Exercise 1 only', () => {
+  it('picking a Basics note plays it next and keeps each note once', () => {
+    let p = newProgress(seeded(5))
+    const first = nextBasicsNote(p)!
+    const other = (['C', 'D', 'E', 'F', 'G', 'A', 'B'] as const).find((n) => n !== first)!
+    p = pickBasicsNote(p, other)
+    expect(nextBasicsNote(p)).toBe(other)
+    expect([...p.basics.queue].sort()).toEqual([...newProgress(seeded(5)).basics.queue].sort())
+    expect(basicsRunsLeft(p, other)).toBe(1)
+    p = recordBasicsClear(p)
+    expect(basicsRunsLeft(p, other)).toBe(0)
+    // nothing left of it: picking changes nothing
+    expect(pickBasicsNote(p, other)).toBe(p)
+  })
+
+  it('Basics takes 7 cleared runs and unlocks Exercise 1 only', () => {
     let p = newProgress(seeded(1))
-    for (let i = 0; i < 13; i++) p = recordBasicsClear(p)
+    for (let i = 0; i < 6; i++) p = recordBasicsClear(p)
     expect(isUnlocked(p, 1)).toBe(false)
     p = recordBasicsClear(p)
     expect(nextBasicsNote(p)).toBeNull()
