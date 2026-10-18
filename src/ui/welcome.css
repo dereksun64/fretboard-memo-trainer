@@ -1,0 +1,182 @@
+/* First-visit welcome: a full-screen overlay over the app until "Let's start". */
+.welcome {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 48px 16px;
+  overflow-y: auto;
+  background: color-mix(in srgb, var(--bg) 78%, transparent);
+  /* Outside .app, so set the base type and colour .app would give it. */
+  color: var(--ink);
+  font: 15px/1.45 var(--font-body);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: welcome-in 0.35s ease-out both;
+}
+.welcome-card {
+  width: min(760px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  padding: 36px 40px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.18);
+  font-size: 16px;
+  line-height: 1.55;
+  animation: welcome-rise 0.45s ease-out both;
+}
+:root[data-style='blueprint'] .welcome-card {
+  border-radius: 0;
+  box-shadow: none;
+  outline: 1px solid var(--accent);
+  outline-offset: 6px;
+}
+
+.welcome-head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+}
+.welcome-head h1 {
+  margin: 0;
+  font-size: 46px;
+  line-height: 1.08;
+  max-width: 14em;
+}
+:root[data-style='blueprint'] .welcome-head h1 {
+  font-style: italic;
+  font-weight: 500;
+}
+.welcome-lead {
+  margin: 0;
+  font-size: 18px;
+  color: var(--muted);
+  max-width: 36em;
+}
+
+.welcome-promises {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.welcome-promises li {
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+:root[data-style='blueprint'] .welcome-promises li {
+  border-radius: 0;
+  border-left: 2px solid var(--accent);
+}
+.welcome-promises h2 {
+  margin: 0 0 6px;
+  font-size: 17px;
+  font-weight: 600;
+}
+.welcome-promises p {
+  margin: 0;
+  font-size: 15px;
+  color: var(--muted);
+}
+
+.welcome-method h2 {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: var(--accent-ink);
+}
+.welcome-method ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--line);
+}
+.welcome-method li {
+  counter-increment: step;
+  display: grid;
+  grid-template-columns: 34px 210px minmax(0, 1fr);
+  gap: 4px 12px;
+  align-items: baseline;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 15px;
+}
+.welcome-method li::before {
+  content: counter(step, decimal-leading-zero);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--muted);
+}
+.welcome-step {
+  font-weight: 600;
+  color: var(--ink);
+}
+.welcome-rules {
+  margin: 12px 0 0;
+  font-size: 14px;
+}
+
+.welcome-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+  font-size: 14px;
+}
+.btn.welcome-start {
+  min-width: 160px;
+  min-height: 48px;
+  font-size: 17px;
+}
+
+@keyframes welcome-in {
+  from { opacity: 0; }
+}
+@keyframes welcome-rise {
+  from { opacity: 0; transform: translateY(14px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .welcome,
+  .welcome-card {
+    animation: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .welcome {
+    padding: 16px;
+  }
+  .welcome-card {
+    padding: 24px 20px;
+    gap: 22px;
+  }
+  .welcome-head h1 {
+    font-size: 34px;
+  }
+  .welcome-promises {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .welcome-method li {
+    grid-template-columns: 30px minmax(0, 1fr);
+  }
+  .welcome-method li > .muted {
+    grid-column: 2;
+  }
+  .btn.welcome-start {
+    width: 100%;
+  }
+}

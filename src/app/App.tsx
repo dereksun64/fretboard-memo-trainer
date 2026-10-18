@@ -12,6 +12,7 @@ import { Home } from '../ui/Home'
 import '../ui/home.css'
 import '../ui/play.css'
 import { Play } from '../ui/Play'
+import { useWelcome, Welcome } from '../ui/Welcome'
 import { useSettings } from './settings'
 
 type Route =
@@ -44,6 +45,9 @@ function useRoute(): Route {
 export function App() {
   const route = useRoute()
   const [settings, updateSettings] = useSettings()
+  // First visit: the welcome overlay covers everything until "Let's start".
+  const [welcome, dismissWelcome] = useWelcome()
+  const welcomeOverlay = welcome && <Welcome onStart={dismissWelcome} />
   const [progress, setProgress] = useState<Progress>(() => loadProgress(Math.random))
 
   useEffect(() => saveProgress(progress), [progress])
@@ -62,7 +66,7 @@ export function App() {
   if (route.name === 'lab') {
     return (
       <StyleContext.Provider value={settings.style}>
-        <div className="app lab">
+        <div className="app lab" inert={welcome}>
           <header className="lab-bar">
             <a href="#/" className="back">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" aria-hidden="true">
@@ -76,13 +80,14 @@ export function App() {
             <Lab />
           </div>
         </div>
+        {welcomeOverlay}
       </StyleContext.Provider>
     )
   }
 
   return (
     <StyleContext.Provider value={settings.style}>
-      <div className="app">
+      <div className="app" inert={welcome}>
         {route.name === 'home' && (
           <Home
             progress={progress}
@@ -114,6 +119,7 @@ export function App() {
           />
         )}
       </div>
+      {welcomeOverlay}
     </StyleContext.Provider>
   )
 }

@@ -18,6 +18,11 @@ A laptop web app that walks you through Thomas's (Music Tutoring for Guitar) six
 
 ## First launch
 
+0. **Welcome overlay** *(built)*. On a browser's first visit, a full-screen overlay covers the app until **Let's start**.
+   - It shows the method's promises, quoted as Thomas's: the reliable way, five minutes a day, nothing to memorize, and it works for everyone who finishes.
+   - It also summarizes the method: Basics → Exercises 1–4 → Increase BPM toward 80, done in order and without rushing the tempo.
+   - It notes that the mic is used and audio stays on the device.
+   - The app underneath is `inert` and its keyboard shortcuts are blocked. Let's start sets `fmt.welcomed`, so it doesn't show again; **Clear local data** brings it back.
 1. **Mic permission.** Open the mic with `echoCancellation`, `noiseSuppression` and `autoGainControl` all **off**.
 2. **Tuner check.** A built-in tuner (it reuses the pitch detector) checks all 6 strings before you start.
 3. **Latency calibration.** You play along with about 8 clicks, and the app stores the average input offset. It can be re-run from settings.
@@ -111,6 +116,7 @@ For each beat, the app compares the detected note onset (after the latency offse
 - **Accuracy** = (Perfect + 0.9 × Good) ÷ judged beats. **Combo** counts consecutive Perfect/Good and resets on Miss or Wrong.
 - **Runs always play to the end.** Misses and wrong notes never stop or pause the run; detection errors are too common for that.
 - **Nothing starts on its own.** Opening an exercise, **Next run** and **Try again** all lay the run out on the highway, ready, with "Press [Space] to start". The hint and the Start button pulse gently (every 1.6 s) until the run starts; the pulse is off under reduced motion.
+  - The hint shows by default until the first run of the visit starts (a page-wide flag, not saved). After that, a ready run shows it only once the page has had no pointer, key or touch input for 3 s; any input hides it again. Hidden, it keeps its space.
 - **Start / Stop** (the last footer button, shortcut **Space**) starts the count-in. While a run plays the same button reads **Stop**: Space again stops the clicks and puts the same run back, ready, without leaving the exercise (after a cleared run, Stop readies the next one). **Esc** (shown on the back link) leaves.
 - **Restart** (button beside Diagram, shortcut **R**) replays the same run from the top right away; the abandoned attempt isn't recorded.
 - **With mistakes**, the end of the run plays a soft error sound and a popup says *We think you made a few mistakes (2 missed, 1 wrong). Try again?*, with the stats, a small *Calibrate in lab →* link and two buttons:
