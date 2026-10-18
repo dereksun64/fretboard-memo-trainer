@@ -400,7 +400,7 @@ function RunView({ run, engine, diagram, windowStart, onToggleDiagram, onToggle,
             </span>
           ))}
         </div>
-        <StartHint hidden={run.started} />
+        <StartHint started={run.started} />
         <div className="foot-actions">
           <button type="button" className="btn" onClick={onRestart}>
             Restart <span className="label muted">R</span>

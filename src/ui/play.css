@@ -538,6 +538,15 @@
 .note-pick:hover .note-pick-hint {
   color: var(--ink);
 }
+/* Blueprint draws a selection box 6px outside the letter, with corner
+   handles reaching ~9px: sit the hint (and the picker under it) clear of it. */
+:root[data-style='blueprint'] .note-pick-hint {
+  left: -6px;
+  top: calc(100% + 15px);
+}
+:root[data-style='blueprint'] .note-picker {
+  top: calc(100% + 36px);
+}
 .note-pick:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
@@ -765,4 +774,14 @@
 .play-foot .foot-actions {
   margin-left: auto;
   justify-content: flex-end;
+}
+
+/* Hidden start hint keeps its space; it fades rather than popping. */
+.start-hint {
+  transition: opacity 0.3s ease;
+}
+.start-hint.is-hidden {
+  visibility: hidden;
+  opacity: 0;
+  animation: none;
 }
