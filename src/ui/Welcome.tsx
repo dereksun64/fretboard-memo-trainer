@@ -36,19 +36,19 @@ const VIDEO_THUMB = 'https://i.ytimg.com/vi/PJddQ6Q0UDo/hqdefault.jpg'
 const VIDEO_TITLE = 'How To MEMORIZE Your Guitar FRETBOARD: The No-Nonsense Exercise That Actually Works'
 
 const PROMISES = [
-  ['The reliable way', 'Know where every note is, not just the patterns.'],
-  ['Five minutes a day', 'Done in order. That’s all it takes.'],
-  ['Nothing to memorize', 'Keep the diagram open. Keep going, even when nothing seems to stick.'],
-  ['It works', 'Thomas says everyone who finished it in order learned the fretboard.'],
+  ['The reliable way', 'You learn where every note actually is instead of leaning on patterns.'],
+  ['Five minutes a day', 'Practice a little each day and do the exercises in order. That’s all it takes.'],
+  ['Nothing to memorize', 'Keep the diagram open while you play. If nothing seems to stick, keep going anyway.'],
+  ['It works', 'Thomas says everyone who finished the exercises in order learned the fretboard.'],
 ] as const
 
 const STEPS = [
-  ['Basics', 'One note on every string, at your own pace.'],
-  ['Naturals', 'The same, at 40 BPM.'],
-  ['Sharps & Flats', 'One fret up or down.'],
-  ['Two Notes', 'One going up, one coming down.'],
-  ['Random', 'All seven naturals, shuffled.'],
-  ['Increase BPM', 'Clean at 80 BPM, and you know it.'],
+  ['Basics', 'Find one note on every string at your own pace.'],
+  ['Naturals', 'Play the same drill along with a metronome at 40 BPM.'],
+  ['Sharps & Flats', 'Move one fret up for a sharp and one fret down for a flat.'],
+  ['Two Notes', 'Play one note going up the strings and another coming back down.'],
+  ['Random', 'Play all seven natural notes in a shuffled order.'],
+  ['Increase BPM', 'Raise the tempo little by little. Once you can play cleanly at 80 BPM, you know the fretboard.'],
 ] as const
 
 export function Welcome({ onStart }: { onStart: () => void }) {
@@ -80,7 +80,8 @@ export function Welcome({ onStart }: { onStart: () => void }) {
             </h1>
           </SelectionBox>
           <p className="welcome-lead">
-            Thomas’s method from Music Theory for Guitar, with a metronome and a mic that checks every note.
+            This app follows Thomas’s method from Music Theory for Guitar. You play along with a metronome while your
+            mic checks each note.
           </p>
         </header>
 
@@ -93,7 +94,7 @@ export function Welcome({ onStart }: { onStart: () => void }) {
             </svg>
           </span>
           <span className="welcome-video-text">
-            <span className="label muted">Watch the method · YouTube ↗</span>
+            <span className="label muted">Watch Thomas explain it on YouTube ↗</span>
             <span className="welcome-video-title">{VIDEO_TITLE}</span>
           </span>
         </a>
@@ -109,8 +110,9 @@ export function Welcome({ onStart }: { onStart: () => void }) {
 
         <section className="welcome-method" aria-labelledby="welcome-method-title">
           <h2 id="welcome-method-title" className="label">
-            The method · in order, no rushing
+            How it works
           </h2>
+          <p className="muted welcome-method-note">Do the steps in order and don’t rush the tempo.</p>
           <ol>
             {STEPS.map(([name, desc]) => (
               <li key={name}>
@@ -122,7 +124,7 @@ export function Welcome({ onStart }: { onStart: () => void }) {
         </section>
 
         <footer className="welcome-foot">
-          <span className="muted">Uses your mic. Nothing is recorded or uploaded.</span>
+          <span className="muted">The app listens through your mic, but nothing is recorded or uploaded.</span>
           <button ref={start} type="button" className="btn primary welcome-start" onClick={onStart}>
             Let’s start
           </button>

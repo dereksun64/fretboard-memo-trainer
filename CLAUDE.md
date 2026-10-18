@@ -202,6 +202,7 @@ Corrections from the owner and mistakes made so far. Read these before starting 
   - Runs always play to the end. Restart is the player's choice.
   - A run with mistakes ends on "We think you made a few mistakes… Try again?" with an **I think I got it** override.
   - Wrong notes before the first note are ignored, in both Basics and the exercises.
+- *Write UI copy as plain, human sentences.* Avoid clipped "A, B" fragments like "The same, at 40 BPM." or "Clean at 80 BPM, and you know it." Say "Play the same drill along with a metronome at 40 BPM." Short is good; terse fragments aren't.
 - *Keep shortcuts minimal.* Letter keys in the note picker were unwanted.
 - *Respect each style.* Blueprint has no hexagon note icons, no selection box on the next note, and no "T" on the playhead. Hit effects are styled per theme.
 - *Retro was removed.* Only Plain and Blueprint remain; don't reintroduce style-specific code for it.
