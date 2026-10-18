@@ -1,4 +1,4 @@
-// Style (Plain / Blueprint / Retro) and theme (system / light / dark)
+// Style (Plain / Blueprint) and theme (system / light / dark)
 // switches, shared by the home screen and the detection lab.
 
 import type { Settings, Style, Theme } from '../app/settings'
@@ -6,7 +6,6 @@ import type { Settings, Style, Theme } from '../app/settings'
 const STYLES: [Style, string][] = [
   ['plain', 'Plain'],
   ['blueprint', 'Blueprint'],
-  ['retro', 'Retro'],
 ]
 const NEXT_THEME: Record<Theme, Theme> = { system: 'light', light: 'dark', dark: 'system' }
 

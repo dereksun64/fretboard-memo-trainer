@@ -134,7 +134,6 @@ export function Highway({ steps, beats, results, now, spb, next, approachCircles
           <path d="M1 9l6-8 6 8" fill="none" stroke="var(--accent)" strokeWidth="1.5" />
         </svg>
       )}
-      {style === 'retro' && <span className="hit-ring" style={{ left: hitX - 9 }} />}
 
       {beats.map((b, i) => {
         const dt = b.time - now

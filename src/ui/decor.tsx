@@ -1,6 +1,5 @@
 // Small style-specific flourishes. The layout is shared; these add the
-// blueprint selection boxes and tags, or the retro colour stripe, only in
-// the style that uses them.
+// blueprint selection boxes and tags only in Blueprint.
 
 import { createContext, useContext, type ReactNode } from 'react'
 import type { Style } from '../app/settings'
@@ -33,20 +32,7 @@ export function SelectionBox({ children }: { children: ReactNode }) {
   )
 }
 
-/** Retro: the four-colour stripe. Other styles: nothing. */
-export function Stripe({ width }: { width?: number | string }) {
-  if (useStyle() !== 'retro') return null
-  return (
-    <span className="stripe" aria-hidden="true" style={{ width }}>
-      <span />
-      <span />
-      <span />
-      <span />
-    </span>
-  )
-}
-
-/** A short highlighted label: blueprint "TEXT↵/" tag, retro chip, plain accent text. */
+/** A short highlighted label: blueprint "TEXT↵/" tag, plain accent text. */
 export function Tag({ children }: { children: ReactNode }) {
   const style = useStyle()
   if (style === 'plain') {

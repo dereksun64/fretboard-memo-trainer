@@ -19,7 +19,7 @@ import {
   type Progress,
 } from '../engine/progress'
 import { AppearanceControls } from './AppearanceControls'
-import { SelectionBox, Stripe, Tag, useStyle } from './decor'
+import { SelectionBox, Tag, useStyle } from './decor'
 import { EXERCISE_INFO, exerciseCode } from './exercises'
 import './home.css'
 
@@ -45,7 +45,6 @@ export function Home({ progress, settings, onSettings, onIncreaseBpm, onSkipBasi
         <div className="wordmark">
           <span className="display">Fretboard</span>
           {style === 'blueprint' && <span className="label muted">Trainer</span>}
-          <Stripe width={108} />
         </div>
         <AppearanceControls settings={settings} onSettings={onSettings} />
       </header>
@@ -57,7 +56,7 @@ export function Home({ progress, settings, onSettings, onIncreaseBpm, onSkipBasi
           </span>
           <SelectionBox>
             <span className="level-value">
-              <span className="display" style={{ color: style === 'retro' ? 'var(--accent)' : undefined }}>
+              <span className="display">
                 {level}
               </span>
               <span className="label muted">BPM</span>
@@ -103,7 +102,7 @@ export function Home({ progress, settings, onSettings, onIncreaseBpm, onSkipBasi
           <span className="row-code label">{style === 'blueprint' ? 'EX–00' : '00'}</span>
           <div className="row-main">
             <span className="row-name">
-              Basics {!basicsCleared && <Tag>{style === 'retro' ? 'Current' : 'Start here'}</Tag>}
+              Basics {!basicsCleared && <Tag>Start here</Tag>}
             </span>
             <span className="muted">Untimed walkthrough: play each note at your own pace.</span>
           </div>

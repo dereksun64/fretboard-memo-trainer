@@ -14,7 +14,7 @@ Keep both current. A change to a rule updates `SPEC.md` in the same change. A co
 
 - **Input:** you play a real guitar into your laptop's built-in mic. The app detects each note and judges it, rhythm-game style (think Yousician), with a built-in metronome.
 - **Privacy:** audio is analyzed live and never recorded or uploaded. Everything is stored in this browser's localStorage.
-- **Look:** a minimal rhythm-game feel with no junk features. There are three visual styles (Plain, Blueprint, Retro), each in light and dark.
+- **Look:** a minimal rhythm-game feel with no junk features. There are two visual styles (Plain, Blueprint), each in light and dark.
 - **Hosting:** live on Vercel. Production deploys from `main`, and every PR gets a preview.
   - Repo: `github.com/dereksun64/fretboard-memo-trainer` (public).
 - **Stack:** Vite 8, React 19, TypeScript 5.9 and vitest. There's no UI framework or state library. `pitchy` is used only for the live tuner readout.
@@ -37,7 +37,7 @@ Use these words in UI copy, code and commits. Don't use game jargon such as prol
 | **Cleared** | A run with no Miss and no Wrong, or one the player passed with **I think I got it**. |
 | **Practice mode** | Any exercise at any BPM; it never touches progress. Planned, not built yet. |
 | **Lab / detection lab** | `#/lab`: mic tuner, note log, detector settings, latency calibration, visual sync and a metronome run test. |
-| **Style / Theme** | Style is Plain, Blueprint or Retro. Theme is system, light or dark. Both are set on `<html data-style data-theme>`. |
+| **Style / Theme** | Style is Plain or Blueprint. Theme is system, light or dark. Both are set on `<html data-style data-theme>`. |
 | **Window** | The 12-fret window notes are expected in (`windowStart`, default frets 1–12). |
 
 Strings are numbered the way guitarists do: **6 = low E … 1 = high e**. Lane labels read `e B G D A E`, and the high **e** stays lowercase.
@@ -62,7 +62,7 @@ src/
     settings.ts         useSettings(): style, theme, windowStart (fmt.settings)
     audio.ts            getAudioEngine() singleton (needs a user gesture); micHelp() error text
     useNow.ts           useFrameValue(): per-frame value, with a timer fallback for hidden tabs
-    tokens.css          CSS variables for 3 styles × 2 modes
+    tokens.css          CSS variables for 2 styles × 2 modes
   audio/                Web Audio: no React in here
     engine.ts           AudioEngine: mic → worklet → analyzer, metronome, clocks, calibration
     analyzer.ts         NoteAnalyzer: SuperFlux onsets + spectral note naming
@@ -85,7 +85,7 @@ src/
     controls.tsx        run-screen controls shared by Basics and Play (StartStop)
     Highway.tsx         six-lane note highway (approach circles, fades, bursts)
     FretDiagram.tsx     fretboard chart for the current window
-    decor.tsx           StyleContext, SelectionBox, Stripe, Tag (style-specific flourishes)
+    decor.tsx           StyleContext, SelectionBox, Tag (Blueprint flourishes)
     AppearanceControls.tsx  style + theme switches (Home and Lab)
     About.tsx, exercises.ts (names/descriptions), *.css
   prototype/            the detection lab (#/lab); styles scoped under .lab-body
@@ -137,7 +137,7 @@ src/
 - **Basics and exercise runs stay in sync.** Unless told otherwise, a change requested for one run screen goes into both `Basics.tsx` and `Play.tsx`: controls, shortcuts, popups, feedback, layout. Skip one only when the change truly can't apply there (Basics has no metronome or timing), and say so.
 - **Logic in `engine/`, pure and tested.** Components wire state and draw.
 - **No layout shift.** Every changing piece of text (judgment, offset, combo, count-in, note) sits in a fixed-size slot. Popups float over the highway (`.results.overlay`) instead of pushing content.
-- **Every feature works in all 3 styles × 2 modes.** Check at least one non-Plain style and dark mode. Respect reduced motion.
+- **Every feature works in both styles × both modes.** Check Blueprint and dark mode, not just Plain light. Respect reduced motion.
 - **Keyboard shortcuts:** add one only when asked. The current set:
   - Runs: Space start/stop, R restart, D diagram, Esc leave (shown on the back link).
   - Basics also has Tab for a random note.
@@ -161,37 +161,24 @@ Run `npm test` (`vitest run`). Tests sit next to their code as `*.test.ts`.
 
 ### End-to-end in the browser pane
 
-There's no Playwright setup. End-to-end checks run in the Claude browser pane against the dev server: `preview_start {name: "dev"}`, port 5173. The pane blocks the real mic, so **swap in a fake mic before pressing Start** (the `.start-stop` button, or Space):
+There's no Playwright setup. End-to-end checks run in the Claude browser pane against the dev server (`preview_start {name: "dev"}`, port 5173), using the **simulated mic** in `src/dev/simMic.ts`.
 
-```js
-const fakeCtx = new AudioContext()
-const dest = fakeCtx.createMediaStreamDestination()
-navigator.mediaDevices.getUserMedia = async () => dest.stream
-// Additive pluck: harmonics 1-6 with a fast attack and ~0.6 s decay.
-const pluckAt = (t, midi) => {
-  const f0 = 440 * 2 ** ((midi - 69) / 12)
-  for (let h = 1; h <= 6; h++) {
-    const o = fakeCtx.createOscillator(); o.frequency.value = f0 * h
-    const g = fakeCtx.createGain()
-    g.gain.setValueAtTime(0.0001, t)
-    g.gain.exponentialRampToValueAtTime(0.3 / h, t + 0.005)
-    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.6)
-    o.connect(g).connect(dest); o.start(t); o.stop(t + 0.65)
-  }
-}
-// Expected MIDI for a step (windowStart 1): open + 1 + ((pc - (open + 1)) mod 12)
-const OPEN = { 6: 40, 5: 45, 4: 50, 3: 55, 2: 59, 1: 64 }
-```
-
-- **Lining up with beats:** after Start, `window.__fmtRun` (dev only) gives `{firstBeat, spb, steps, now()}`. Convert engine time to fake-context time with `off = fakeCtx.currentTime - __fmtRun.now()`. Then schedule `pluckAt(firstBeat + i * spb + off, midi)`. Skip indexes to cause misses, or shift pitch to cause wrong notes.
-- **Basics:** pluck "now" (`fakeCtx.currentTime + 0.05`) and read the expected note from `.note-pick` and `.target-string`.
-- **Assert on the DOM:** `.play-foot .counts`, `.run-meta`, `.judgment-slot`, `.results.overlay`, and the `fmt.progress` localStorage key. Take screenshots for visual changes.
+- **Load with `?sim`**, e.g. `http://localhost:5173/?sim#/basics`. In dev, this swaps `getUserMedia` for a synthetic stream; production builds don't include it. The engine is a singleton, so `?sim` must be there from page load: a fake mic patched in later never reaches an engine that's already open.
+- **Reach screens by clicking** (e.g. Home → Play), as a user would. That gives the page the user activation that audio needs.
+- **`window.__sim`** plays additive plucks (harmonics 1–6, ~0.6 s decay) into the stream:
+  - `__sim.pluck(midi)`: pluck now.
+  - `__sim.basics(offset = 0)`: play the note Basics is waiting for, or `offset` semitones off it. Uses the dev hook `__fmtBasics`.
+  - `__sim.playRun({ skip, wrong, offsetMs })`: schedule a whole started exercise run on its beats. `skip` beats become misses, `wrong` beats are a semitone sharp, and `offsetMs` shifts every note. Uses the dev hook `__fmtRun`.
+  - `__sim.runEndsIn()`: seconds until the started run's results show.
+  - `__sim.state()`: a DOM snapshot (button, hint slot, note, string, progress, counts, overlay, Basics state).
+  - `__sim.wait(ms)`: a promise-based sleep for test scripts.
+- **Test systematically.** Script each flow as *action → pluck → `state()`* and keep a log. Cover arrive, start, stop, restart, random, pick, wrong-before-first, wrong-after-first, full run → next. Press keys with the `computer` key action (Space, R, D, Tab, Esc), not synthetic events, so user activation and focus behave for real.
 - **Seed state:** edit `localStorage['fmt.progress']` (for example `basics.cleared` or `level`; level 80 makes runs short), then reload. **Clear local data** on Home resets everything.
 - **Pane quirks:**
   - Right after `location.reload()`, the next script can run before the page mounts. Retry if `.start-stop` is null.
-  - The pane reports reduced motion, so monkeypatch `matchMedia` to check animations.
+  - When the pane is hidden, screenshots can show a stale frame. Trust `__sim.state()` / the DOM over the image.
+  - The pane may report reduced motion, which switches CSS animations off. Check `matchMedia('(prefers-reduced-motion: reduce)')` before judging an animation.
   - Hidden-pane timers are throttled.
-- **Tap R or D** with the `computer` key action.
 - **Not covered:** a real guitar and real mic latency. Say so whenever reporting results.
 
 ## Lessons
@@ -214,6 +201,7 @@ Corrections from the owner and mistakes made so far. Read these before starting 
   - Wrong notes before the first note are ignored, in both Basics and the exercises.
 - *Keep shortcuts minimal.* Letter keys in the note picker were unwanted.
 - *Respect each style.* Blueprint has no hexagon note icons, no selection box on the next note, and no "T" on the playhead. Hit effects are styled per theme.
+- *Retro was removed.* Only Plain and Blueprint remain; don't reintroduce style-specific code for it.
 - *Notes fade instead of snapping,* and the highway keeps scrolling past the last note before results show.
 - *Lab:*
   - It has a back button and the same appearance toggles as the game, and keeps its panels in a 2×2 grid at any width.
