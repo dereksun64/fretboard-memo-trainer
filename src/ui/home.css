@@ -247,7 +247,14 @@
   border-color: var(--wrong);
   color: var(--wrong);
 }
+/* Home fills at least the screen, so on a short page the footer sits at the
+   bottom of the screen; on a long one it simply follows the content. */
+.page.home {
+  min-height: calc(100vh - var(--app-pad-top) - var(--app-pad-bottom));
+  min-height: calc(100dvh - var(--app-pad-top) - var(--app-pad-bottom));
+}
 .home-foot {
+  margin-top: auto;
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;

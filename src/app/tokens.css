@@ -77,13 +77,15 @@ body {
 }
 
 .app {
+  --app-pad-top: 28px;
+  --app-pad-bottom: 56px;
   min-height: 100vh;
   background-color: var(--bg);
   background-image: var(--texture);
   background-size: var(--texture-size);
   color: var(--ink);
   font: 15px/1.45 var(--font-body);
-  padding: 28px var(--gutter) 56px;
+  padding: var(--app-pad-top) var(--gutter) var(--app-pad-bottom);
 }
 
 .page {

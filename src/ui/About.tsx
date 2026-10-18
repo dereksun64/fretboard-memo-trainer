@@ -21,7 +21,7 @@ export function About() {
       <section>
         <h2 className="label">The method</h2>
         <p>
-          The exercises follow the fretboard-memorization method taught by Thomas of Music Tutoring for Guitar. Finding
+          The exercises follow the fretboard-memorization method taught by Thomas of Music Theory for Guitar. Finding
           notes is the slowest part of playing for most guitarists, and there is no shortcut: you have to actually know
           where each note is. Five minutes a day, done in order, gets you there.
         </p>

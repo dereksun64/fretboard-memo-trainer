@@ -30,32 +30,25 @@ export function useWelcome(): [boolean, () => void] {
   return [show, dismiss]
 }
 
+// Thomas's video on the method (Music Theory for Guitar, YouTube).
+const VIDEO_URL = 'https://youtu.be/PJddQ6Q0UDo'
+const VIDEO_THUMB = 'https://i.ytimg.com/vi/PJddQ6Q0UDo/hqdefault.jpg'
+const VIDEO_TITLE = 'How To MEMORIZE Your Guitar FRETBOARD: The No-Nonsense Exercise That Actually Works'
+
 const PROMISES = [
-  {
-    title: 'The reliable way',
-    body: 'Finding notes is the slowest part of playing for most guitarists, and patterns alone don’t fix it. You have to actually know where each note is. There’s no shortcut, but there is a method that works.',
-  },
-  {
-    title: 'Five minutes a day',
-    body: 'It isn’t hard. A short session every day, done strictly in order, is all it takes.',
-  },
-  {
-    title: 'Nothing to memorize',
-    body: 'Keep the fretboard diagram open the whole time. It’s normal to feel like nothing is sticking. Keep going, and it works.',
-  },
-  {
-    title: 'It works for everyone who finishes',
-    body: 'Thomas says everyone who did all the exercises in order learned the fretboard, without exception.',
-  },
-]
+  ['The reliable way', 'Know where every note is, not just the patterns.'],
+  ['Five minutes a day', 'Done in order. That’s all it takes.'],
+  ['Nothing to memorize', 'Keep the diagram open. Keep going, even when nothing seems to stick.'],
+  ['It works', 'Thomas says everyone who finished it in order learned the fretboard.'],
+] as const
 
 const STEPS = [
-  ['Basics', 'One note on every string, low to high and back, at your own pace.'],
-  ['Exercise 1 · Naturals', 'The same, now with a metronome at 40 BPM. That small bit of time pressure is what makes it stick.'],
-  ['Exercise 2 · Sharps & Flats', 'One fret up for a sharp, one down for a flat. A♯ and B♭ are practiced as separate notes.'],
-  ['Exercise 3 · Two Notes', 'One note going up the strings, another coming back down, without pausing.'],
-  ['Exercise 4 · Random', 'All seven naturals in a shuffled order, one note per beat.'],
-  ['Increase BPM', 'Then raise the tempo bit by bit. Clean at 80 BPM, and you know your fretboard.'],
+  ['Basics', 'One note on every string, at your own pace.'],
+  ['Naturals', 'The same, at 40 BPM.'],
+  ['Sharps & Flats', 'One fret up or down.'],
+  ['Two Notes', 'One going up, one coming down.'],
+  ['Random', 'All seven naturals, shuffled.'],
+  ['Increase BPM', 'Clean at 80 BPM, and you know it.'],
 ] as const
 
 export function Welcome({ onStart }: { onStart: () => void }) {
@@ -87,23 +80,36 @@ export function Welcome({ onStart }: { onStart: () => void }) {
             </h1>
           </SelectionBox>
           <p className="welcome-lead">
-            A practice tool for Thomas’s fretboard method (Music Tutoring for Guitar). Play along on your guitar and your
-            microphone checks each note as you go.
+            Thomas’s method from Music Theory for Guitar, with a metronome and a mic that checks every note.
           </p>
         </header>
 
+        <a className="welcome-video" href={VIDEO_URL} target="_blank" rel="noopener noreferrer">
+          <span className="welcome-thumb">
+            <img src={VIDEO_THUMB} alt="" loading="lazy" referrerPolicy="no-referrer" />
+            <svg className="welcome-play" width="48" height="48" viewBox="0 0 48 48" aria-hidden="true">
+              <circle cx="24" cy="24" r="23" />
+              <path d="M19 15l14 9-14 9z" />
+            </svg>
+          </span>
+          <span className="welcome-video-text">
+            <span className="label muted">Watch the method · YouTube ↗</span>
+            <span className="welcome-video-title">{VIDEO_TITLE}</span>
+          </span>
+        </a>
+
         <ul className="welcome-promises">
-          {PROMISES.map((p) => (
-            <li key={p.title}>
-              <h2>{p.title}</h2>
-              <p>{p.body}</p>
+          {PROMISES.map(([title, body]) => (
+            <li key={title}>
+              <h2>{title}</h2>
+              <p>{body}</p>
             </li>
           ))}
         </ul>
 
         <section className="welcome-method" aria-labelledby="welcome-method-title">
           <h2 id="welcome-method-title" className="label">
-            The method
+            The method · in order, no rushing
           </h2>
           <ol>
             {STEPS.map(([name, desc]) => (
@@ -113,13 +119,10 @@ export function Welcome({ onStart }: { onStart: () => void }) {
               </li>
             ))}
           </ol>
-          <p className="muted welcome-rules">
-            Do them in order, and don’t rush the tempo: too much pressure early on keeps your brain from learning.
-          </p>
         </section>
 
         <footer className="welcome-foot">
-          <span className="muted">Uses your microphone. Your audio never leaves this device.</span>
+          <span className="muted">Uses your mic. Nothing is recorded or uploaded.</span>
           <button ref={start} type="button" className="btn primary welcome-start" onClick={onStart}>
             Let’s start
           </button>

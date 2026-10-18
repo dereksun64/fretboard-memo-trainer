@@ -10,7 +10,7 @@ Keep both current. A change to a rule updates `SPEC.md` in the same change. A co
 
 ## About
 
-**Fretboard Trainer** is a web app for memorizing every note on the guitar fretboard. It follows the method taught by Thomas of *Music Tutoring for Guitar*.
+**Fretboard Trainer** is a web app for memorizing every note on the guitar fretboard. It follows the method taught by Thomas of *Music Theory for Guitar*.
 
 - **Input:** you play a real guitar into your laptop's built-in mic. The app detects each note and judges it, rhythm-game style (think Yousician), with a built-in metronome.
 - **Privacy:** audio is analyzed live and never recorded or uploaded. Everything is stored in this browser's localStorage.
@@ -193,6 +193,7 @@ Corrections from the owner and mistakes made so far. Read these before starting 
   - Build what was asked.
   - If a number or rule isn't stated, ask or flag it as an assumption.
 - *Don't over-engineer.* A save migration was unwanted ("no need to migrate").
+- *Verify names and sources.* The method's channel is **Music Theory for Guitar** (Thomas; video [youtu.be/PJddQ6Q0UDo](https://youtu.be/PJddQ6Q0UDo)). The original write-up said "Music Tutoring for Guitar", and that went into the app unchecked until it was looked up.
 - *Check before reporting.* I once said nothing had been pushed when the branches were already on GitHub. Check with `git` / `gh` first.
 
 **Product**

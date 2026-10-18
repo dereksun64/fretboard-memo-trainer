@@ -1,6 +1,6 @@
 # Fretboard Memo Trainer — Spec
 
-A laptop web app that walks you through Thomas's (Music Tutoring for Guitar) six-exercise method for memorizing every note on the fretboard. It has a built-in metronome and listens through the mic to judge what you play. It should feel like a rhythm game without piling on extra features.
+A laptop web app that walks you through Thomas's (Music Theory for Guitar) six-exercise method for memorizing every note on the fretboard. It has a built-in metronome and listens through the mic to judge what you play. It should feel like a rhythm game without piling on extra features.
 
 ## The method in brief
 
@@ -20,6 +20,8 @@ A laptop web app that walks you through Thomas's (Music Tutoring for Guitar) six
 
 0. **Welcome overlay** *(built)*. On a browser's first visit, a full-screen overlay covers the app until **Let's start**.
    - It shows the method's promises, quoted as Thomas's: the reliable way, five minutes a day, nothing to memorize, and it works for everyone who finishes.
+   - A linked thumbnail of Thomas's video ([youtu.be/PJddQ6Q0UDo](https://youtu.be/PJddQ6Q0UDo), YouTube's own `hqdefault` image cropped to 16:9) opens it in a new tab. There's no embedded player.
+   - Copy is kept short: one line per promise and per step.
    - It also summarizes the method: Basics → Exercises 1–4 → Increase BPM toward 80, done in order and without rushing the tempo.
    - It notes that the mic is used and audio stays on the device.
    - The app underneath is `inert` and its keyboard shortcuts are blocked. Let's start sets `fmt.welcomed`, so it doesn't show again; **Clear local data** brings it back.
