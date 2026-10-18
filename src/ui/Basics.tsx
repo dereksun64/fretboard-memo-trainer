@@ -13,10 +13,10 @@ import { basicsDone, basicsRunsLeft, nextBasicsNote, type Progress } from '../en
 import { singleNoteRun, type Step } from '../engine/sequence'
 import { feedWait, startWait, type WaitState } from '../engine/waitMode'
 import { NATURALS, expectedMidi, midiToName, stringLabel, type Natural } from '../music/notes'
-import { SelectionBox, Stripe, Tag } from './decor'
+import { SelectionBox, Tag } from './decor'
 import { FretDiagram } from './FretDiagram'
 import { Highway, type Flash } from './Highway'
-import { StartStop } from './controls'
+import { StartHint, StartStop } from './controls'
 import './play.css'
 
 interface Props {
@@ -215,6 +215,10 @@ export function Basics({ progress, windowStart, onRunCleared, onPickNote, onSkip
     </div>
   )
 
+  if (import.meta.env.DEV) {
+    // Lets browser tests play the note Basics is waiting for (see src/dev/simMic.ts).
+    Object.assign(window, { __fmtBasics: { note: run.note, started: run.started, expected: run.expected, pos: wait.pos } })
+  }
   const current = run.steps[Math.min(wait.pos, run.steps.length - 1)]
 
   return (
@@ -255,12 +259,11 @@ export function Basics({ progress, windowStart, onRunCleared, onPickNote, onSkip
           </div>
           <div className="target-side">
             <span className="target-string">{wait.done ? 'run cleared' : `${stringLabel(current.string)} string`}</span>
-            <Stripe width={96} />
           </div>
         </div>
         <div className="feedback" aria-live="polite">
           <span className="judgment-slot wide">
-            {!run.started && <span className="muted">Press Space to start</span>}
+            {!run.started && <StartHint />}
             {run.started && wrong && (
               <>
                 <Tag>Wrong</Tag>

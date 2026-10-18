@@ -1,7 +1,7 @@
 // The fretboard chart Thomas says you may look at while practicing.
 
 import { OPEN_STRING_MIDI, STRING_NAME, STRINGS, type StringNum } from '../music/notes'
-import { Stripe, useStyle } from './decor'
+import { useStyle } from './decor'
 
 const NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
 const MARKERS = new Set([3, 5, 7, 9, 12, 15, 17, 19])
@@ -15,8 +15,7 @@ export function FretDiagram({ windowStart }: { windowStart: number }) {
   return (
     <figure className="diagram">
       <figcaption className="diagram-title label">
-        {style === 'blueprint' ? <span className="tag">FIG.1 — {title}</span> : <span className="muted">{style === 'retro' ? `Fig. 01 · ${title}` : title}</span>}
-        <Stripe width={72} />
+        {style === 'blueprint' ? <span className="tag">FIG.1 — {title}</span> : <span className="muted">{title}</span>}
       </figcaption>
       <div className="diagram-scroll">
         <table>

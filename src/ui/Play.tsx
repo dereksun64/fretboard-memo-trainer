@@ -15,8 +15,8 @@ import { drawPool, type ExerciseId, type PoolItem } from '../engine/pools'
 import { clearedCount, isUnlocked, nextItem, poolSize, type Progress } from '../engine/progress'
 import { REPS, runSteps, type Step } from '../engine/sequence'
 import { midiToName, stringLabel } from '../music/notes'
-import { StartStop } from './controls'
-import { SelectionBox, Stripe, Tag } from './decor'
+import { StartHint, StartStop } from './controls'
+import { SelectionBox, Tag } from './decor'
 import { EXERCISE_INFO, exerciseCode } from './exercises'
 import { FretDiagram } from './FretDiagram'
 import { Highway } from './Highway'
@@ -316,12 +316,11 @@ function RunView({ run, engine, diagram, windowStart, onToggleDiagram, onToggle,
           </SelectionBox>
           <div className="target-side">
             <span className="target-string">{countIn ? 'Count-in' : `${stringLabel(target.string)} string`}</span>
-            <Stripe width={96} />
           </div>
         </div>
         <div className="feedback" aria-live="polite">
           <span className="judgment-slot">
-            {!run.started && <span className="muted">Press Space to start</span>}
+            {!run.started && <StartHint />}
             {run.started && last && (
               <>
                 <Tag>{last.judgment}</Tag>

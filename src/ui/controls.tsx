@@ -8,3 +8,12 @@ export function StartStop({ started, onToggle }: { started: boolean; onToggle: (
     </button>
   )
 }
+
+/** "Press Space to start", pulsing gently until the run starts. */
+export function StartHint() {
+  return (
+    <span className="start-hint">
+      Press <kbd>Space</kbd> to start
+    </span>
+  )
+}

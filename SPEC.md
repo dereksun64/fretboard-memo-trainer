@@ -13,7 +13,7 @@ A laptop web app that walks you through Thomas's (Music Tutoring for Guitar) six
 
 - Desktop browser on a laptop, using the **built-in mic**.
 - **No audio recording** is saved. The app only listens live.
-- **Three styles × light and dark** (see *Visual design*).
+- **Two styles (Plain, Blueprint) × light and dark** (see *Visual design*).
 - Runs entirely in the browser with no backend. Progress lives in `localStorage`.
 
 ## First launch
@@ -109,7 +109,7 @@ For each beat, the app compares the detected note onset (after the latency offse
 - **Cleared** = zero Wrong and zero Miss. Perfect and Good both count as clean.
 - **Accuracy** = (Perfect + 0.9 × Good) ÷ judged beats. **Combo** counts consecutive Perfect/Good and resets on Miss or Wrong.
 - **Runs always play to the end.** Misses and wrong notes never stop or pause the run; detection errors are too common for that.
-- **Nothing starts on its own.** Opening an exercise, **Next run** and **Try again** all lay the run out on the highway, ready, with "Press Space to start".
+- **Nothing starts on its own.** Opening an exercise, **Next run** and **Try again** all lay the run out on the highway, ready, with "Press [Space] to start". The hint and the Start button pulse gently (every 1.6 s) until the run starts; the pulse is off under reduced motion.
 - **Start / Stop** (the last footer button, shortcut **Space**) starts the count-in. While a run plays the same button reads **Stop**: Space again stops the clicks and puts the same run back, ready, without leaving the exercise (after a cleared run, Stop readies the next one). **Esc** (shown on the back link) leaves.
 - **Restart** (button beside Diagram, shortcut **R**) replays the same run from the top right away; the abandoned attempt isn't recorded.
 - **With mistakes**, the end of the run plays a soft error sound and a popup says *We think you made a few mistakes (2 missed, 1 wrong). Try again?*, with the stats, a small *Calibrate in lab →* link and two buttons:
@@ -128,9 +128,9 @@ For each beat, the app compares the detected note onset (after the latency offse
 - Six-lane highway, one lane per string, labelled **e B G D A E** (high e on top, like tab). Prose says "high e" / "low E".
 - Note circles labelled with the note name scroll toward a hit line, with an **osu-style approach circle** shrinking onto each note as its beat nears.
 - Notes **keep sliding past the hit line and fade out** in their judgment colour (they never snap to a dot); at the end of a run the last note fades before the results appear.
-- A short **hit burst** on the hit line, styled per theme: a ring (Plain), a square selection box with corner handles (Blueprint), a double ripple (Retro). Reduced-motion users get no approach circles and non-scaling bursts.
+- A short **hit burst** on the hit line, styled per theme: a ring (Plain), a square selection box with corner handles (Blueprint). Reduced-motion users get no approach circles and non-scaling bursts.
 - **Fixed layout**: changing text (target note, string name, judgment, ms offset, combo, counts) sits in fixed-width slots, and results float over the highway, so nothing on the page shifts.
-- **Basics uses the same highway**: each correct note slides the next onto the hit line; a wrong note scrolls back to the start with a red burst.
+- **Basics uses the same highway**: each correct note slides the next onto the hit line; a wrong note flashes red on its string and the highway waits.
 - Perfect / Good / Miss / Wrong judgments appear on each hit.
 - Combo counter.
 - Results screen: Cleared (or the mistakes popup), accuracy, Perfect/Good counts, max combo.
@@ -151,7 +151,6 @@ One layout, the calm **Minimal** layout (direction B on the design canvas), with
 |---|---|
 | **Plain** | Geist type, hairlines, outlined note circles, one blue accent. |
 | **Blueprint** | Grid background, Bodoni serif letters and numbers with condensed labels, cobalt selection boxes with corner handles, `↵/` tags, the hit line drawn as a measured axis. Notes look like the other styles (outlined circles, solid next note): never hexagons, and no selection box on the next note. |
-| **Retro** | Lone Trail palette (#5C7F71, #802520, #BA8530, #181818, #F5EDDC, #B2653B), cream paper or black with scanlines, Jost + Oswald, four-colour stripe, orange label chips, record-groove note discs, halftone combo dots, dot-matrix timecode. |
 
 - The layout and components are shared; a style is a set of design tokens (colours, fonts, textures) plus a few style-specific decorations.
 - Mockups and the interactive Style preview live on the design canvas: https://claude.ai/artifact/Rm2VGCE6t9Zuyqz3iceQMd
@@ -159,7 +158,7 @@ One layout, the calm **Minimal** layout (direction B on the design canvas), with
 ## Settings
 
 - Theme: light / dark / system.
-- Style: Plain / Blueprint / Retro.
+- Style: Plain / Blueprint. (Retro was removed; a saved Retro choice falls back to Plain.)
 - Fret window start (default fret 1, so 1–12; e.g. 5 gives 5–16).
 - Re-run latency calibration.
 - Tuner.
@@ -189,7 +188,7 @@ One layout, the calm **Minimal** layout (direction B on the design canvas), with
 ## Build order
 
 0. **Detection prototype**: mic → live note + octave + onset timing against a metronome. Confirms the built-in mic works before anything else.
-1. **UI mockups** *(done)*: chose B's layout with a Plain / Blueprint / Retro style setting.
+1. **UI mockups** *(done)*: chose B's layout with a style setting (now Plain / Blueprint; Retro was dropped).
 2. **Core engine** *(done)*: `src/engine/` — pools (`pools.ts`), run sequences (`sequence.ts`), judging and run summary (`judge.ts`), Basics wait mode (`waitMode.ts`), progress/locking/BPM increase (`progress.ts`) and `localStorage` persistence (`storage.ts`), all pure and unit-tested.
 3. **Rhythm-mode UI** *(done)*: Home (level bar, in-order exercise list, style + theme switch), Play (count-in, live highway, judgments, combo, results, diagram on D, Start/Stop on Space, Esc to leave) and Basics (wait mode). Routes: `#/`, `#/basics`, `#/play/1`–`4`, `#/lab` (detection prototype).
 4. **Onboarding** (mic check, tuner, latency calibration in-app instead of the lab) and a settings screen (fret window, metronome volume).

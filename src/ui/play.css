@@ -71,9 +71,6 @@
   height: 100%;
   background: var(--ink);
 }
-:root[data-style='retro'] .run-progress > span {
-  background: var(--accent);
-}
 
 /* ---- Target + feedback ---- */
 .target-row {
@@ -100,9 +97,6 @@
   padding: 0 6px;
   box-sizing: content-box;
   white-space: nowrap;
-}
-:root[data-style='retro'] .target-note {
-  color: var(--accent);
 }
 .target-side {
   display: flex;
@@ -195,15 +189,6 @@
   position: absolute;
   top: -2px;
 }
-.hit-ring {
-  position: absolute;
-  top: -2px;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  border: 3px solid var(--accent);
-  background: var(--bg);
-}
 :root[data-style='blueprint'] .highway {
   overflow: visible;
 }
@@ -239,13 +224,6 @@
   border-color: var(--next-bg);
   color: var(--next-fg);
 }
-:root[data-style='retro'] .note.next {
-  box-shadow:
-    inset 0 0 0 3px var(--next-bg),
-    inset 0 0 0 4px rgba(24, 24, 24, 0.4),
-    inset 0 0 0 7px var(--next-bg),
-    inset 0 0 0 8px rgba(24, 24, 24, 0.35);
-}
 
 /* Judgment colour, shared by passed notes and hit bursts. */
 .perfect { --c: var(--perfect); }
@@ -266,9 +244,6 @@
 :root[data-style='blueprint'] .note.past {
   border-width: 1.5px;
 }
-:root[data-style='retro'] .note.past {
-  border-width: 2px;
-}
 
 /* osu-style approach circle: shrinks onto the note as its beat nears. */
 .approach {
@@ -284,9 +259,6 @@
 }
 :root[data-style='blueprint'] .approach {
   border: 1px dashed var(--accent);
-}
-:root[data-style='retro'] .approach {
-  border-width: 3px;
 }
 
 /* Hit burst on the hit line (transform and opacity set inline). */
@@ -319,12 +291,6 @@
 .burst .tr { right: -3.5px; top: -3.5px; }
 .burst .bl { left: -3.5px; bottom: -3.5px; }
 .burst .br { right: -3.5px; bottom: -3.5px; }
-/* Retro: a double ripple, like grooves spreading out. */
-:root[data-style='retro'] .burst {
-  border-width: 3px;
-  outline: 2px solid var(--c);
-  outline-offset: 5px;
-}
 
 /* String names keep their case (high e vs low E) in every style. */
 .string-name,
@@ -417,9 +383,6 @@
   padding: 20px 24px;
   border: 1px solid var(--ink);
   border-radius: var(--radius);
-}
-:root[data-style='retro'] .results {
-  border-radius: 0;
 }
 .results-main {
   display: flex;
@@ -590,9 +553,6 @@
   border-color: var(--accent);
   border-radius: 0;
 }
-:root[data-style='retro'] .note-picker {
-  border-radius: 0;
-}
 .note-picker-title {
   font-size: 12px;
 }
@@ -638,13 +598,6 @@
 .note-picker-btn.spent {
   opacity: 0.55;
 }
-:root[data-style='retro'] .note-picker-btn {
-  border-radius: 0;
-}
-:root[data-style='retro'] .note-picker-btn.current {
-  background: var(--accent);
-  border-color: var(--accent);
-}
 
 /* ---- Start / Stop ---- */
 .start-stop {
@@ -666,4 +619,48 @@
 .head-side .link-btn {
   text-transform: none;
   letter-spacing: normal;
+}
+
+/* "Press Space to start": the hint and the Start button pulse together,
+   once every 1.6 s, until the run starts. */
+.start-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--ink);
+  font-weight: 600;
+  white-space: nowrap;
+  animation: start-hint-pulse 1.6s ease-in-out infinite;
+}
+.start-hint kbd {
+  padding: 1px 7px 2px;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  box-shadow: 0 2px 0 currentColor;
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.4;
+}
+:root[data-style='blueprint'] .start-hint {
+  color: var(--accent-ink);
+}
+:root[data-style='blueprint'] .start-hint kbd {
+  border-radius: 0;
+}
+@keyframes start-hint-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+.start-stop.primary {
+  animation: start-ring 1.6s ease-out infinite;
+}
+@keyframes start-ring {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 55%, transparent); }
+  70%, 100% { box-shadow: 0 0 0 9px color-mix(in srgb, var(--accent) 0%, transparent); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .start-hint,
+  .start-stop.primary {
+    animation: none;
+  }
 }

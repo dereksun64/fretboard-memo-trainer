@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react'
 
-export type Style = 'plain' | 'blueprint' | 'retro'
+export type Style = 'plain' | 'blueprint'
+const STYLES: readonly Style[] = ['plain', 'blueprint']
 export type Theme = 'light' | 'dark' | 'system'
 
 export interface Settings {
@@ -18,7 +19,11 @@ const DEFAULTS: Settings = { style: 'plain', theme: 'system', windowStart: 1 }
 function load(): Settings {
   try {
     const raw = localStorage.getItem(KEY)
-    if (raw) return { ...DEFAULTS, ...(JSON.parse(raw) as Partial<Settings>) }
+    if (raw) {
+      const saved = { ...DEFAULTS, ...(JSON.parse(raw) as Partial<Settings>) }
+      // A style that no longer exists (Retro was removed) falls back to Plain.
+      return STYLES.includes(saved.style) ? saved : { ...saved, style: DEFAULTS.style }
+    }
   } catch {
     // unreadable: defaults
   }

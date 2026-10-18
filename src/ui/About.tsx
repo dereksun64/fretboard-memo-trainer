@@ -1,4 +1,3 @@
-import { Stripe } from './decor'
 import './about.css'
 
 export function About() {
@@ -13,7 +12,6 @@ export function About() {
 
       <header>
         <h1 className="display">About Fretboard Trainer</h1>
-        <Stripe width={140} />
         <p className="lead">
           A practice tool for memorizing every note on the guitar fretboard. Play along with the exercises and your
           microphone checks each note as you go.

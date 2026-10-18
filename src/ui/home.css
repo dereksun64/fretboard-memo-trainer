@@ -13,10 +13,6 @@
   gap: 4px 10px;
   font-size: 22px;
 }
-.wordmark .stripe {
-  flex-basis: 100%;
-  height: 4px;
-}
 
 .head-controls {
   display: flex;
@@ -108,16 +104,6 @@
 .bar-rainbow {
   background: linear-gradient(90deg, #e5484d, #f2994a, #e9c46a, #46a758, #3e9be0, #6e56cf, #d6409f);
 }
-:root[data-style='retro'] .bar {
-  height: 22px;
-  border-radius: 0;
-}
-:root[data-style='retro'] .bar-fill {
-  background: var(--accent);
-}
-:root[data-style='retro'] .bar-rainbow {
-  background: repeating-linear-gradient(90deg, #802520 0 16px, #ba8530 16px 32px, #5c7f71 32px 48px, #d27c49 48px 64px, #6e5aa8 64px 80px);
-}
 :root[data-style='blueprint'] .bar {
   height: 5px;
   border-radius: 0;
@@ -140,9 +126,6 @@
   padding: 18px 20px;
   border: 1px solid var(--accent);
   border-radius: var(--radius);
-}
-:root[data-style='retro'] .increase {
-  border-radius: 0;
 }
 .stepper {
   display: flex;
@@ -174,12 +157,6 @@
 }
 .row.current .row-code {
   color: var(--accent-ink);
-}
-:root[data-style='retro'] .row-code {
-  font-family: var(--font-display);
-  font-size: 28px;
-  font-weight: 600;
-  letter-spacing: 0;
 }
 .row-main {
   flex: 999 1 260px;
@@ -222,15 +199,6 @@
   background: var(--ink);
 }
 :root[data-style='blueprint'] .pips > span.on {
-  background: var(--accent);
-}
-:root[data-style='retro'] .pips > span {
-  flex: none;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-}
-:root[data-style='retro'] .pips > span.on {
   background: var(--accent);
 }
 .row .btn {
