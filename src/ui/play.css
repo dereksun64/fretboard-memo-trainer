@@ -214,6 +214,14 @@
   font-size: 16px;
   font-weight: 600;
   will-change: transform, opacity;
+  /* Judging changes the colours (lit next note -> miss, hit fill): ease them
+     instead of snapping. Transform and opacity are set every frame and must
+     not be transitioned. */
+  transition:
+    background-color 0.35s ease,
+    border-color 0.35s ease,
+    color 0.35s ease,
+    box-shadow 0.35s ease;
 }
 :root[data-style='blueprint'] .note {
   font-family: var(--font-display);
@@ -747,7 +755,8 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .diagram-arrow,
-  .collapse {
+  .collapse,
+  .note {
     transition: none;
   }
 }

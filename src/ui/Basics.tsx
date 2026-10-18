@@ -327,10 +327,10 @@ export function Basics({ progress, windowStart, onRunCleared, onPickNote, onSkip
           <button type="button" className="btn" onClick={random}>
             Random <span className="label muted">Tab</span>
           </button>
-          <StartStop started={run.started} onToggle={toggle} />
           <button type="button" className="btn" onClick={restart}>
             Restart <span className="label muted">R</span>
           </button>
+          <StartStop started={run.started} onToggle={toggle} />
         </div>
       </section>
 
