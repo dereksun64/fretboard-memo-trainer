@@ -151,7 +151,8 @@ For each beat, the app compares the detected note onset (after the latency offse
 **Out:** coins, achievements, daily quests, skins, leaderboards and audio recording.
 
 **Run-screen layout** (Basics and Exercises alike):
-- Header, top right: the BPM (Basics: runs done), with a **Ready / Listening / Hearing C3** status under it.
+- **One screen, same rows.** Both screens fit one window with the diagram open: down to 800px tall, with tighter lanes, letter and diagram rows below 820px. They share the same rows (header, run-meta and progress bar, target, highway, footer, diagram), so the diagram sits in the same place on both. Basics' run-meta shows runs cleared, Skip Basics and "Note 01/36".
+- Header, top right: the BPM (Basics: "No metronome"), with a **Ready / Listening / Hearing C3** status under it. Basics' "Pick a note…" sits beside the big letter, under the string name.
 - Footer row: counts on the left, the pulsing "Press [Space] to start" in the middle, and the buttons on the right: (Random,) **Restart**, **Start/Stop** (Start/Stop rightmost). The buttons stay right-aligned when the row wraps.
 - Under the counts: a **Diagram** disclosure row (also D). Its arrow turns and the fretboard diagram slides open or shut. Open by default, since Thomas allows looking.
 

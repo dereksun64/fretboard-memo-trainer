@@ -197,21 +197,7 @@ export function Basics({ progress, windowStart, onRunCleared, onPickNote, onSkip
         <span className="label muted">Esc</span>
       </a>
       <span className="head-right">
-        <span className="head-side label muted">
-          {cleared}/{total} runs · no metronome
-          {!basicsDone(progress) && (
-            <button
-              type="button"
-              className="link-btn"
-              onClick={() => {
-                onSkip()
-                navigate('/')
-              }}
-            >
-              Skip Basics
-            </button>
-          )}
-        </span>
+        <span className="label muted">No metronome</span>
         <ListenStatus engine={engine} started={run.started} />
       </span>
     </div>
@@ -231,6 +217,31 @@ export function Basics({ progress, windowStart, onRunCleared, onPickNote, onSkip
           {error}
         </p>
       )}
+      {/* Same row as the exercises' run meta, so both screens line up. */}
+      <div className="run-meta label muted">
+        <span className="run-note head-side">
+          {cleared} of {total} runs cleared.
+          {!basicsDone(progress) && (
+            <button
+              type="button"
+              className="link-btn"
+              onClick={() => {
+                onSkip()
+                navigate('/')
+              }}
+            >
+              Skip Basics
+            </button>
+          )}
+        </span>
+        <span>
+          Note <span className="ink mono">{String(Math.min(wait.pos + 1, run.steps.length)).padStart(2, '0')}</span>/{run.steps.length}
+        </span>
+      </div>
+      <div className="run-progress" role="progressbar" aria-label="Run progress" aria-valuemin={0} aria-valuemax={run.steps.length} aria-valuenow={wait.pos}>
+        <span style={{ width: `${(wait.pos / run.steps.length) * 100}%` }} />
+      </div>
+
       <section className="target-row">
         <div className="target">
           <div className="note-pick-wrap">
@@ -245,9 +256,6 @@ export function Basics({ progress, windowStart, onRunCleared, onPickNote, onSkip
                 onClick={() => setPicking((v) => !v)}
               >
                 {run.note}
-                <span className="note-pick-hint" aria-hidden="true">
-                  Pick a note…
-                </span>
               </button>
             </SelectionBox>
             {picking && (
@@ -261,6 +269,11 @@ export function Basics({ progress, windowStart, onRunCleared, onPickNote, onSkip
           </div>
           <div className="target-side">
             <span className="target-string">{wait.done ? 'run cleared' : `${stringLabel(current.string)} string`}</span>
+            {/* Beside the letter rather than under it, so it never runs into the
+                Blueprint selection box or the highway. */}
+            <button type="button" className="note-pick-hint" aria-expanded={picking} onClick={() => setPicking((v) => !v)}>
+              Pick a note…
+            </button>
           </div>
         </div>
         <div className="feedback" aria-live="polite">
@@ -390,7 +403,7 @@ function NotePicker({
   const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
     const onDown = (e: PointerEvent) => {
-      if (!ref.current?.contains(e.target as Node) && !(e.target as Element).closest?.('.note-pick')) onClose()
+      if (!ref.current?.contains(e.target as Node) && !(e.target as Element).closest?.('.note-pick, .note-pick-hint')) onClose()
     }
     addEventListener('pointerdown', onDown)
     return () => removeEventListener('pointerdown', onDown)

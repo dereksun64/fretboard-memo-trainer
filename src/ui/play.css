@@ -1,6 +1,35 @@
-.play {
+/* .page.play: tokens.css loads later, and its .page gap would win. */
+.page.play {
   max-width: 1180px;
-  gap: 24px;
+  gap: 16px;
+}
+/* Run screens (Basics and the exercises) are sized to fit one screen with
+   the diagram open, and share the same rows so the diagram sits in the
+   same place on both. */
+.app:has(> .page.play) {
+  --app-pad-bottom: 24px;
+}
+/* Short laptop screens: shrink the big letter and the diagram rows too
+   (the highway's lanes shrink via --lane-h in tokens.css). */
+@media (max-height: 820px) {
+  .page.play .target {
+    height: 72px;
+  }
+  .page.play .target-note {
+    font-size: 72px;
+  }
+  .page.play .diagram th,
+  .page.play .diagram td {
+    height: 22px;
+    padding: 0;
+    line-height: 1;
+  }
+  .page.play .diagram-toggle {
+    min-height: 32px;
+  }
+  .app:has(> .page.play) {
+    --app-pad-top: 18px;
+  }
 }
 
 .play-head {
@@ -57,7 +86,7 @@
   justify-content: flex-end;
   gap: 22px;
   font-size: 14px;
-  margin-bottom: -12px;
+  margin-bottom: -8px;
 }
 .ink {
   color: var(--ink);
@@ -84,7 +113,7 @@
   display: flex;
   align-items: flex-end;
   gap: 20px;
-  height: 108px;
+  height: 88px;
 }
 /* Fixed box: wide enough for "C#"/"Db" or a count-in digit, so nothing
    next to it moves when the note changes. */
@@ -92,7 +121,7 @@
   display: inline-block;
   width: 1.45em;
   height: 0.9em;
-  font-size: 112px;
+  font-size: 88px;
   line-height: 0.85;
   padding: 0 6px;
   box-sizing: content-box;
@@ -157,7 +186,7 @@
 /* ---- Highway ---- */
 .highway {
   position: relative;
-  height: 312px;
+  height: calc(var(--lane-h) * 6);
   overflow: hidden;
 }
 .lane {
@@ -449,7 +478,7 @@
 }
 .diagram th,
 .diagram td {
-  height: 30px;
+  height: 26px;
   text-align: center;
   font-weight: 400;
 }
@@ -521,31 +550,29 @@
 .note-pick[aria-expanded='true'] {
   background: var(--track);
 }
-/* Sits just under the letter, so the letter box keeps its fixed size. */
+/* "Pick a note…": a small text button beside the letter, under the string. */
 .note-pick-hint {
-  position: absolute;
-  left: 6px;
-  top: calc(100% + 4px);
+  align-self: flex-start;
+  padding: 0;
+  border: none;
+  background: none;
   font-family: var(--font-body);
-  font-size: 12px;
+  font-size: 13px;
   font-style: normal;
   font-weight: 400;
-  line-height: 1;
   letter-spacing: normal;
-  white-space: nowrap;
   color: var(--muted);
+  cursor: pointer;
 }
-.note-pick:hover .note-pick-hint {
+.note-pick-hint:hover,
+.note-pick-hint[aria-expanded='true'] {
   color: var(--ink);
+  text-decoration: underline;
 }
-/* Blueprint draws a selection box 6px outside the letter, with corner
-   handles reaching ~9px: sit the hint (and the picker under it) clear of it. */
-:root[data-style='blueprint'] .note-pick-hint {
-  left: -6px;
-  top: calc(100% + 15px);
-}
+/* The picker opens under the letter; in Blueprint, clear of the selection
+   box (6px out) and its corner handles (~9px). */
 :root[data-style='blueprint'] .note-picker {
-  top: calc(100% + 36px);
+  top: calc(100% + 20px);
 }
 .note-pick:focus-visible {
   outline: 2px solid var(--accent);
@@ -554,7 +581,7 @@
 .note-picker {
   position: absolute;
   left: 0;
-  top: calc(100% + 26px);
+  top: calc(100% + 12px);
   z-index: 3;
   display: flex;
   flex-direction: column;
@@ -723,7 +750,7 @@
 .diagram-section {
   display: flex;
   flex-direction: column;
-  margin-top: -14px; /* sits right under the counts row */
+  margin-top: -8px; /* sits right under the counts row */
 }
 .diagram-toggle {
   align-self: flex-start;
