@@ -139,9 +139,10 @@ For each beat, the app compares the detected note onset (after the latency offse
 
 **Out:** coins, achievements, daily quests, skins, leaderboards and audio recording.
 
-**Fretboard diagram:**
-- Always shown in Basics.
-- In Exercises 1–4 it's a toggle with a keyboard shortcut, on by default, since Thomas allows looking.
+**Run-screen layout** (Basics and Exercises alike):
+- Header, top right: the BPM (Basics: runs done), with a **Ready / Listening / Hearing C3** status under it.
+- Footer row: counts on the left, the pulsing "Press [Space] to start" in the middle, and the buttons on the right: (Random,) **Start/Stop**, **Restart**. The buttons stay right-aligned when the row wraps.
+- Under the counts: a **Diagram** disclosure row (also D). Its arrow turns and the fretboard diagram slides open or shut. Open by default, since Thomas allows looking.
 
 ## Visual design
 

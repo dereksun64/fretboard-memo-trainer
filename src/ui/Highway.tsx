@@ -8,7 +8,7 @@
 //   and fades out;
 // - a played note sets off a short burst on the hit line.
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { BeatResult, BeatTarget } from '../engine/judge'
 import type { Step } from '../engine/sequence'
 import { STRING_NAME, type StringNum } from '../music/notes'
@@ -24,6 +24,11 @@ const BURST_S = 0.38 // hit effect duration
 const LANES: StringNum[] = [1, 2, 3, 4, 5, 6]
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v))
+
+// Last measured highway width. Each new run remounts the highway (Stop,
+// Restart, Next), so starting from this instead of a guess keeps the notes
+// from drawing one frame at the wrong scale and jumping.
+let lastWidth = 800
 
 function useReducedMotion(): boolean {
   const [reduced, setReduced] = useState(
@@ -66,7 +71,7 @@ export function Highway({ steps, beats, results, now, spb, next, approachCircles
   const style = useStyle()
   const reduced = useReducedMotion()
   const ref = useRef<HTMLDivElement>(null)
-  const [width, setWidth] = useState(800)
+  const [width, setWidth] = useState(() => lastWidth)
   // When each beat's judgment first showed up (wall clock). Bursts are timed
   // from that moment rather than from the pluck, because note detection lags
   // the pluck by ~0.1 s and the burst would otherwise start half-finished.
@@ -78,10 +83,17 @@ export function Highway({ steps, beats, results, now, spb, next, approachCircles
     else if (!judgedAt.current.has(i)) judgedAt.current.set(i, wall)
   })
 
-  useEffect(() => {
+  // Measure before the first paint (a layout effect re-renders synchronously),
+  // then follow resizes.
+  useLayoutEffect(() => {
     const el = ref.current
     if (!el) return
-    const ro = new ResizeObserver(([e]) => setWidth(e.contentRect.width))
+    const measure = (w: number) => {
+      lastWidth = w
+      setWidth(w)
+    }
+    measure(el.getBoundingClientRect().width)
+    const ro = new ResizeObserver(([e]) => measure(e.contentRect.width))
     ro.observe(el)
     return () => ro.disconnect()
   }, [])

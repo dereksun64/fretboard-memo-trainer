@@ -600,8 +600,10 @@
 }
 
 /* ---- Start / Stop ---- */
-.start-stop {
-  min-width: 118px;
+/* .btn.start-stop: tokens.css loads after this file, so plain .start-stop
+   loses to .btn's min-width and the button would shrink on "Stop". */
+.btn.start-stop {
+  min-width: 124px;
   justify-content: space-between;
 }
 .start-stop.primary .label {
@@ -663,4 +665,95 @@
   .start-stop.primary {
     animation: none;
   }
+}
+/* Middle of the footer: grows to fill the gap so the hint sits centred
+   between the counts and the buttons. */
+.foot-hint {
+  flex: 1 1 auto;
+  display: flex;
+  justify-content: center;
+}
+.foot-hint .start-hint {
+  gap: 10px;
+  font-size: 20px;
+}
+.foot-hint .start-hint kbd {
+  padding: 2px 10px 3px;
+  border-radius: 5px;
+  box-shadow: 0 3px 0 currentColor;
+  font-size: 16px;
+}
+:root[data-style='blueprint'] .foot-hint .start-hint kbd {
+  border-radius: 0;
+}
+
+/* ---- Header status (top right, under the BPM) ---- */
+.head-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+.head-right .listening {
+  justify-content: flex-end;
+  margin-right: 0;
+}
+.dot.idle {
+  background: var(--muted);
+}
+
+/* ---- Diagram disclosure: arrow turns, chart slides open ---- */
+.diagram-section {
+  display: flex;
+  flex-direction: column;
+  margin-top: -14px; /* sits right under the counts row */
+}
+.diagram-toggle {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  font-size: 15px;
+  cursor: pointer;
+}
+.diagram-arrow {
+  transition: transform 0.25s ease;
+}
+.diagram-toggle[aria-expanded='true'] .diagram-arrow {
+  transform: rotate(90deg);
+}
+.collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 0.3s ease, opacity 0.25s ease;
+}
+.collapse[data-open='true'] {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+.collapse-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+.collapse-inner > .diagram {
+  padding-top: 10px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .diagram-arrow,
+  .collapse {
+    transition: none;
+  }
+}
+
+/* Start / Restart stay right-aligned, even when the footer wraps. */
+.play-foot .foot-actions {
+  margin-left: auto;
+  justify-content: flex-end;
 }
