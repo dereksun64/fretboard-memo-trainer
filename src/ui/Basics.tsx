@@ -322,7 +322,7 @@ export function Basics({ progress, windowStart, onRunCleared, onPickNote, onSkip
             <span className="label muted">wrong</span>
           </span>
         </div>
-        <StartHint hidden={run.started} />
+        <StartHint started={run.started} />
         <div className="foot-actions">
           <button type="button" className="btn" onClick={random}>
             Random <span className="label muted">Tab</span>

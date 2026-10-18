@@ -82,11 +82,13 @@ src/
     Home.tsx            level + bar, Increase BPM, exercise list, Skip Basics, Clear local data
     Basics.tsx          wait-mode run screen, note picker, BasicsHighway
     Play.tsx            rhythm-mode run screen (ready → count-in → judging → results / mistakes popup)
-    controls.tsx        run-screen controls shared by Basics and Play (StartStop)
+    controls.tsx        run-screen controls shared by Basics and Play: StartStop, StartHint
+                        (page-wide `hintSeen` flag + 3 s idle), ListenStatus, DiagramSection
     Highway.tsx         six-lane note highway (approach circles, fades, bursts)
     FretDiagram.tsx     fretboard chart for the current window
     decor.tsx           StyleContext, SelectionBox, Tag (Blueprint flourishes)
     AppearanceControls.tsx  style + theme switches (Home and Lab)
+    Welcome.tsx         first-visit overlay (promises + method summary, "Let's start"; fmt.welcomed)
     About.tsx, exercises.ts (names/descriptions), *.css
   prototype/            the detection lab (#/lab); styles scoped under .lab-body
 ```
@@ -220,4 +222,7 @@ Corrections from the owner and mistakes made so far. Read these before starting 
   - Abrupt note endings looked like onsets; that's fixed by the `afterSum < 1.2 × beforeSum` rule.
 - *Lowercase high e:* `.label` uppercases text, so string names opt out (`.string-name`).
 - *Never capture browser combos.* An R shortcut must not swallow Cmd+R.
+- *Overlays outside `.app`:*
+  - `.app` sets the base font and colour, so anything rendered beside it (like `Welcome`) must set them itself.
+  - Screen shortcuts listen on `window`, so a modal must make the app `inert` and stop keys in a capture-phase `window` listener. `stopPropagation` only; the dialog's own Tab and Enter still work.
 - *CSS order:* `tokens.css` loads after the component stylesheets, so a component rule that overrides `.btn` (or another base class) needs the extra specificity, e.g. `.btn.start-stop`. Otherwise it silently loses; that's how Start/Stop lost its fixed width.
