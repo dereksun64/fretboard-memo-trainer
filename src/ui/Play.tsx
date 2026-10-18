@@ -10,7 +10,7 @@ import { useFrameValue } from '../app/useNow'
 import type { AudioEngine } from '../audio/engine'
 import { runAccents } from '../audio/metronome'
 import { playMissSound } from '../audio/sfx'
-import { beatTargets, hitWindowMs, judgeBeats, summarize, type BeatTarget, type PlayedNote, type RunSummary } from '../engine/judge'
+import { beatTargets, judgeBeats, summarize, type BeatTarget, type PlayedNote, type RunSummary } from '../engine/judge'
 import { drawPool, type ExerciseId, type PoolItem } from '../engine/pools'
 import { clearedCount, isUnlocked, nextItem, poolSize, type Progress } from '../engine/progress'
 import { REPS, runSteps, type Step } from '../engine/sequence'
@@ -302,9 +302,6 @@ function RunView({ run, engine, diagram, windowStart, onToggleDiagram, onToggle,
         <span>
           Beat <span className="ink mono">{String(beatNo).padStart(2, '0')}</span>/{run.steps.length}
         </span>
-        <span>
-          ±<span className="mono">{Math.round(hitWindowMs(run.bpm))}</span> ms
-        </span>
       </div>
       <div className="run-progress" role="progressbar" aria-label="Run progress" aria-valuemin={0} aria-valuemax={run.steps.length} aria-valuenow={beatNo}>
         <span style={{ width: `${(Math.max(0, beatNo - 1) / run.steps.length) * 100}%` }} />
@@ -405,10 +402,10 @@ function RunView({ run, engine, diagram, windowStart, onToggleDiagram, onToggle,
         </div>
         <StartHint hidden={run.started} />
         <div className="foot-actions">
-          <StartStop started={run.started} onToggle={onToggle} />
           <button type="button" className="btn" onClick={onRestart}>
             Restart <span className="label muted">R</span>
           </button>
+          <StartStop started={run.started} onToggle={onToggle} />
         </div>
       </section>
 

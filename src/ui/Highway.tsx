@@ -20,6 +20,8 @@ const HIT = 0.18 // hit line position as a fraction of the note area
 const BEAT_FRAC = 0.095 // horizontal distance between beats, fraction of the note area
 const APPROACH_SCALE = 2.6 // approach circle size (x note) when it appears
 const FADE_BEATS = 0.9 // how long a passed note takes to fade out
+const ENTER_BEATS = 1.2 // how far a note travels onto the highway while fading in
+const NOTE_R = 20 // note circle radius (px), matches .note in play.css
 const BURST_S = 0.38 // hit effect duration
 const LANES: StringNum[] = [1, 2, 3, 4, 5, 6]
 
@@ -150,10 +152,14 @@ export function Highway({ steps, beats, results, now, spb, next, approachCircles
       {beats.map((b, i) => {
         const dt = b.time - now
         const x = hitX + (dt / spb) * beatPx
-        if (x < -40 || x > width + 40) return null
+        // A note only shows once it's on the highway: nothing past the lanes'
+        // right end, then a short fade in as it rolls on.
+        const end = width - NOTE_R
+        if (x < -40 || x >= end) return null
+        const enter = clamp01((end - x) / (ENTER_BEATS * beatPx))
         const judgment = results[i]?.judgment ?? 'pending'
         const past = dt < 0
-        const fade = past ? clamp01(1 + dt / (FADE_BEATS * spb)) : 1
+        const fade = (past ? clamp01(1 + dt / (FADE_BEATS * spb)) : 1) * enter
         if (fade <= 0) return null
         const shrink = reduced ? 1 : 0.8 + 0.2 * fade
 

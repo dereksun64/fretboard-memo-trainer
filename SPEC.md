@@ -102,6 +102,7 @@ For each beat, the app compares the detected note onset (after the latency offse
 
 - **Hit window** = `min(25% of beat duration, 200 ms)`, on each side of the beat.
   - That's ±200 ms up to 75 BPM, ±187 ms at 80 BPM and ±150 ms at 100 BPM.
+  - The window isn't shown in the UI; the per-note offset (e.g. "+24 ms") still is.
 - **Perfect** = within 40% of the hit window, e.g. ±80 ms at 40 BPM.
 - **Good** = inside the hit window but not Perfect.
 - **Miss** = no correct note onset within the window.
@@ -127,6 +128,8 @@ For each beat, the app compares the detected note onset (after the latency offse
 **In:**
 - Six-lane highway, one lane per string, labelled **e B G D A E** (high e on top, like tab). Prose says "high e" / "low E".
 - Note circles labelled with the note name scroll toward a hit line, with an **osu-style approach circle** shrinking onto each note as its beat nears.
+- Notes **only appear on the highway**: nothing is drawn past the lanes' right end, and each note fades in over its first ~1.2 beats on the highway.
+- When a note is judged, its colours **ease over 0.35 s** (e.g. the lit next note turning into a miss) instead of snapping.
 - Notes **keep sliding past the hit line and fade out** in their judgment colour (they never snap to a dot); at the end of a run the last note fades before the results appear.
 - A short **hit burst** on the hit line, styled per theme: a ring (Plain), a square selection box with corner handles (Blueprint). Reduced-motion users get no approach circles and non-scaling bursts.
 - **Fixed layout**: changing text (target note, string name, judgment, ms offset, combo, counts) sits in fixed-width slots, and results float over the highway, so nothing on the page shifts.
@@ -141,7 +144,7 @@ For each beat, the app compares the detected note onset (after the latency offse
 
 **Run-screen layout** (Basics and Exercises alike):
 - Header, top right: the BPM (Basics: runs done), with a **Ready / Listening / Hearing C3** status under it.
-- Footer row: counts on the left, the pulsing "Press [Space] to start" in the middle, and the buttons on the right: (Random,) **Start/Stop**, **Restart**. The buttons stay right-aligned when the row wraps.
+- Footer row: counts on the left, the pulsing "Press [Space] to start" in the middle, and the buttons on the right: (Random,) **Restart**, **Start/Stop** (Start/Stop rightmost). The buttons stay right-aligned when the row wraps.
 - Under the counts: a **Diagram** disclosure row (also D). Its arrow turns and the fretboard diagram slides open or shut. Open by default, since Thomas allows looking.
 
 ## Visual design
