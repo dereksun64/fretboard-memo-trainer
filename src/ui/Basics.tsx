@@ -14,9 +14,8 @@ import { singleNoteRun, type Step } from '../engine/sequence'
 import { feedWait, startWait, type WaitState } from '../engine/waitMode'
 import { NATURALS, expectedMidi, midiToName, stringLabel, type Natural } from '../music/notes'
 import { SelectionBox, Tag } from './decor'
-import { FretDiagram } from './FretDiagram'
 import { Highway, type Flash } from './Highway'
-import { StartHint, StartStop } from './controls'
+import { DiagramSection, ListenStatus, StartHint, StartStop } from './controls'
 import './play.css'
 
 interface Props {
@@ -197,20 +196,23 @@ export function Basics({ progress, windowStart, onRunCleared, onPickNote, onSkip
         <span className="back-name">Basics</span>
         <span className="label muted">Esc</span>
       </a>
-      <span className="head-side label muted">
-        {cleared}/{total} runs · no metronome
-        {!basicsDone(progress) && (
-          <button
-            type="button"
-            className="link-btn"
-            onClick={() => {
-              onSkip()
-              navigate('/')
-            }}
-          >
-            Skip Basics
-          </button>
-        )}
+      <span className="head-right">
+        <span className="head-side label muted">
+          {cleared}/{total} runs · no metronome
+          {!basicsDone(progress) && (
+            <button
+              type="button"
+              className="link-btn"
+              onClick={() => {
+                onSkip()
+                navigate('/')
+              }}
+            >
+              Skip Basics
+            </button>
+          )}
+        </span>
+        <ListenStatus engine={engine} started={run.started} />
       </span>
     </div>
   )
@@ -263,8 +265,7 @@ export function Basics({ progress, windowStart, onRunCleared, onPickNote, onSkip
         </div>
         <div className="feedback" aria-live="polite">
           <span className="judgment-slot wide">
-            {!run.started && <StartHint />}
-            {run.started && wrong && (
+            {wrong && (
               <>
                 <Tag>Wrong</Tag>
                 <span className="muted">
@@ -321,21 +322,19 @@ export function Basics({ progress, windowStart, onRunCleared, onPickNote, onSkip
             <span className="label muted">wrong</span>
           </span>
         </div>
+        <StartHint hidden={run.started} />
         <div className="foot-actions">
           <button type="button" className="btn" onClick={random}>
             Random <span className="label muted">Tab</span>
           </button>
+          <StartStop started={run.started} onToggle={toggle} />
           <button type="button" className="btn" onClick={restart}>
             Restart <span className="label muted">R</span>
           </button>
-          <button type="button" className="btn" aria-pressed={diagram} onClick={() => setDiagram((d) => !d)}>
-            Diagram <span className="label muted">D</span>
-          </button>
-          <StartStop started={run.started} onToggle={toggle} />
         </div>
       </section>
 
-      {diagram && <FretDiagram windowStart={windowStart} />}
+      <DiagramSection open={diagram} onToggle={() => setDiagram((d) => !d)} windowStart={windowStart} />
     </main>
   )
 }

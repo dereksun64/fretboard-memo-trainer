@@ -220,3 +220,4 @@ Corrections from the owner and mistakes made so far. Read these before starting 
   - Abrupt note endings looked like onsets; that's fixed by the `afterSum < 1.2 × beforeSum` rule.
 - *Lowercase high e:* `.label` uppercases text, so string names opt out (`.string-name`).
 - *Never capture browser combos.* An R shortcut must not swallow Cmd+R.
+- *CSS order:* `tokens.css` loads after the component stylesheets, so a component rule that overrides `.btn` (or another base class) needs the extra specificity, e.g. `.btn.start-stop`. Otherwise it silently loses; that's how Start/Stop lost its fixed width.

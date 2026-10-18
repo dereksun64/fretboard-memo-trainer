@@ -15,10 +15,9 @@ import { drawPool, type ExerciseId, type PoolItem } from '../engine/pools'
 import { clearedCount, isUnlocked, nextItem, poolSize, type Progress } from '../engine/progress'
 import { REPS, runSteps, type Step } from '../engine/sequence'
 import { midiToName, stringLabel } from '../music/notes'
-import { StartHint, StartStop } from './controls'
+import { DiagramSection, ListenStatus, StartHint, StartStop } from './controls'
 import { SelectionBox, Tag } from './decor'
 import { EXERCISE_INFO, exerciseCode } from './exercises'
-import { FretDiagram } from './FretDiagram'
 import { Highway } from './Highway'
 import './play.css'
 
@@ -171,7 +170,10 @@ export function Play({ exercise, progress, windowStart, onRunFinished }: Props) 
         <span className="back-name">{info.name}</span>
         <span className="label muted">Esc</span>
       </a>
-      <span className="label muted">{progress.level} BPM</span>
+      <span className="head-right">
+        <span className="label muted">{progress.level} BPM</span>
+        <ListenStatus engine={engine} started={run.started} />
+      </span>
     </div>
   )
 
@@ -288,7 +290,6 @@ function RunView({ run, engine, diagram, windowStart, onToggleDiagram, onToggle,
   const perRep = run.steps.length / REPS
   const beatNo = next === -1 ? run.steps.length : next + 1
   const rep = Math.min(REPS, Math.floor((beatNo - 1) / perRep) + 1)
-  const heard = engine?.livePitch.midi ?? null
   const mistakes = summary ? summary.miss + summary.wrong : 0
 
   return (
@@ -320,8 +321,7 @@ function RunView({ run, engine, diagram, windowStart, onToggleDiagram, onToggle,
         </div>
         <div className="feedback" aria-live="polite">
           <span className="judgment-slot">
-            {!run.started && <StartHint />}
-            {run.started && last && (
+            {last && (
               <>
                 <Tag>{last.judgment}</Tag>
                 <span className="offset mono muted">
@@ -403,30 +403,16 @@ function RunView({ run, engine, diagram, windowStart, onToggleDiagram, onToggle,
             </span>
           ))}
         </div>
+        <StartHint hidden={run.started} />
         <div className="foot-actions">
-          <span className="listening label muted">
-            <span className="dot perfect" />
-            {heard !== null ? (
-              <>
-                Hearing <span className="mono">{midiToName(Math.round(heard))}</span>
-              </>
-            ) : run.started ? (
-              'Listening'
-            ) : (
-              'Ready'
-            )}
-          </span>
+          <StartStop started={run.started} onToggle={onToggle} />
           <button type="button" className="btn" onClick={onRestart}>
             Restart <span className="label muted">R</span>
           </button>
-          <button type="button" className="btn" aria-pressed={diagram} onClick={onToggleDiagram}>
-            Diagram <span className="label muted">D</span>
-          </button>
-          <StartStop started={run.started} onToggle={onToggle} />
         </div>
       </section>
 
-      {diagram && <FretDiagram windowStart={windowStart} />}
+      <DiagramSection open={diagram} onToggle={onToggleDiagram} windowStart={windowStart} />
     </>
   )
 }
