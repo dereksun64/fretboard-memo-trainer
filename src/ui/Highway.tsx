@@ -14,7 +14,6 @@ import type { Step } from '../engine/sequence'
 import { STRING_NAME, type StringNum } from '../music/notes'
 import { useStyle } from './decor'
 
-const LANE_H = 52
 const LABEL_W = 40
 const HIT = 0.18 // hit line position as a fraction of the note area
 const BEAT_FRAC = 0.095 // horizontal distance between beats, fraction of the note area
@@ -27,10 +26,11 @@ const LANES: StringNum[] = [1, 2, 3, 4, 5, 6]
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v))
 
-// Last measured highway width. Each new run remounts the highway (Stop,
+// Last measured highway size. Each new run remounts the highway (Stop,
 // Restart, Next), so starting from this instead of a guess keeps the notes
-// from drawing one frame at the wrong scale and jumping.
-let lastWidth = 800
+// from drawing one frame at the wrong scale and jumping. The height comes
+// from CSS (6 × --lane-h), which shrinks on short screens.
+let lastSize = { width: 800, height: 6 * 52 }
 
 function useReducedMotion(): boolean {
   const [reduced, setReduced] = useState(
@@ -73,7 +73,7 @@ export function Highway({ steps, beats, results, now, spb, next, approachCircles
   const style = useStyle()
   const reduced = useReducedMotion()
   const ref = useRef<HTMLDivElement>(null)
-  const [width, setWidth] = useState(() => lastWidth)
+  const [{ width, height }, setSize] = useState(() => lastSize)
   // When each beat's judgment first showed up (wall clock). Bursts are timed
   // from that moment rather than from the pluck, because note detection lags
   // the pluck by ~0.1 s and the burst would otherwise start half-finished.
@@ -90,12 +90,13 @@ export function Highway({ steps, beats, results, now, spb, next, approachCircles
   useLayoutEffect(() => {
     const el = ref.current
     if (!el) return
-    const measure = (w: number) => {
-      lastWidth = w
-      setWidth(w)
+    const measure = (width: number, height: number) => {
+      lastSize = { width, height }
+      setSize(lastSize)
     }
-    measure(el.getBoundingClientRect().width)
-    const ro = new ResizeObserver(([e]) => measure(e.contentRect.width))
+    const r = el.getBoundingClientRect()
+    measure(r.width, r.height)
+    const ro = new ResizeObserver(([e]) => measure(e.contentRect.width, e.contentRect.height))
     ro.observe(el)
     return () => ro.disconnect()
   }, [])
@@ -106,7 +107,8 @@ export function Highway({ steps, beats, results, now, spb, next, approachCircles
   // Approach circles appear ~1.6 beats out, but never shorter than 0.45 s
   // or longer than 1.2 s, like osu's approach rate.
   const approachS = Math.min(1.2, Math.max(0.45, 1.6 * spb))
-  const laneY = (s: StringNum) => (s - 1) * LANE_H + LANE_H / 2
+  const laneH = height / LANES.length
+  const laneY = (s: StringNum) => (s - 1) * laneH + laneH / 2
 
   const burst = (key: string, string: StringNum, judgment: string, at: number) => {
     const age = (wall - at) / 1000

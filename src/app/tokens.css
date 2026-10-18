@@ -4,7 +4,12 @@
 
 :root {
   --gutter: 40px;
-  --lane-h: 52px;
+  --lane-h: 44px; /* highway lane; the highway is 6 lanes tall */
+}
+@media (max-height: 820px) {
+  :root {
+    --lane-h: 38px; /* short screens: keep run screens on one page */
+  }
 }
 
 /* ---- Plain ---- */

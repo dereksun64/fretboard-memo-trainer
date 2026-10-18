@@ -138,6 +138,7 @@ src/
 
 - **Basics and exercise runs stay in sync.** Unless told otherwise, a change requested for one run screen goes into both `Basics.tsx` and `Play.tsx`: controls, shortcuts, popups, feedback, layout. Skip one only when the change truly can't apply there (Basics has no metronome or timing), and say so.
 - **Logic in `engine/`, pure and tested.** Components wire state and draw.
+- **Run screens fit one window** (≥ 800px tall, diagram open) and share the same rows in Basics and Play, so the diagram sits in the same place. Measure both after any layout change, including Blueprint.
 - **No layout shift.** Every changing piece of text (judgment, offset, combo, count-in, note) sits in a fixed-size slot. Popups float over the highway (`.results.overlay`) instead of pushing content.
 - **Every feature works in both styles × both modes.** Check Blueprint and dark mode, not just Plain light. Respect reduced motion.
 - **Keyboard shortcuts:** add one only when asked. The current set:
@@ -227,4 +228,4 @@ Corrections from the owner and mistakes made so far. Read these before starting 
 - *Overlays outside `.app`:*
   - `.app` sets the base font and colour, so anything rendered beside it (like `Welcome`) must set them itself.
   - Screen shortcuts listen on `window`, so a modal must make the app `inert` and stop keys in a capture-phase `window` listener. `stopPropagation` only; the dialog's own Tab and Enter still work.
-- *CSS order:* `tokens.css` loads after the component stylesheets, so a component rule that overrides `.btn` (or another base class) needs the extra specificity, e.g. `.btn.start-stop`. Otherwise it silently loses; that's how Start/Stop lost its fixed width.
+- *CSS order:* `tokens.css` loads after the component stylesheets, so a component rule that overrides `.btn` (or another base class) needs the extra specificity, e.g. `.btn.start-stop`. Otherwise it silently loses; that's how Start/Stop lost its fixed width, how `.play`'s gap never applied (`.page` from tokens.css won, so use `.page.play`), and how a `:root` override in play.css lost to tokens.css. Put `:root` variable overrides in tokens.css.
