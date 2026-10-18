@@ -2,7 +2,7 @@
 
 Learn every note on the guitar fretboard with five minutes a day of play-along exercises. The app listens through your microphone and checks each note in the browser; audio is never recorded or uploaded.
 
-It follows the fretboard-memorization method taught by Thomas of Music Tutoring for Guitar: Basics, then four metronome exercises, at a tempo that rises from 40 to 80 BPM as you clear them. See [SPEC.md](SPEC.md) for the full design.
+It follows the fretboard-memorization method taught by Thomas of Music Theory for Guitar: Basics, then four metronome exercises, at a tempo that rises from 40 to 80 BPM as you clear them. See [SPEC.md](SPEC.md) for the full design.
 
 ## Develop
 
